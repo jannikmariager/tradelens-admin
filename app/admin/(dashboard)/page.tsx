@@ -2,6 +2,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { KPITile } from '@/components/admin/kpi-tile'
 import { Users, DollarSign, TrendingUp, AlertTriangle, Cpu, Database } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { UserGrowthChart } from '@/components/charts/user-growth-chart'
+import { RevenueChart } from '@/components/charts/revenue-chart'
+import { getRevenueChartData } from '@/lib/stripe'
 
 async function getDashboardStats() {
   const supabase = await createAdminClient()
@@ -47,6 +50,28 @@ async function getDashboardStats() {
 
   const dataProviderCostToday = dataCostsToday?.reduce((sum, row) => sum + (row.cost_usd || 0), 0) || 0
 
+  // Get user growth data for last 30 days
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  const userGrowthData = []
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    
+    const { count } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .lte('created_at', startOfDay.toISOString())
+    
+    userGrowthData.push({
+      date: startOfDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      users: count || 0,
+    })
+  }
+
+  // Get revenue chart data
+  const revenueChartData = await getRevenueChartData()
+
   return {
     totalUsers: totalUsers || 0,
     newUsersToday: newUsersToday || 0,
@@ -54,6 +79,8 @@ async function getDashboardStats() {
     alertsToday: alertsToday || 0,
     crashesToday: crashesToday || 0,
     dataProviderCostToday,
+    userGrowthData,
+    revenueChartData,
   }
 }
 
@@ -116,24 +143,20 @@ export default async function AdminDashboardPage() {
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">User Growth</CardTitle>
-            <CardDescription>New users over the last 30 days</CardDescription>
+            <CardDescription>Total users over the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-slate-500">
-              Chart placeholder - Integrate Recharts
-            </div>
+            <UserGrowthChart data={stats.userGrowthData} />
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">Revenue Trend</CardTitle>
-            <CardDescription>MRR over the last 6 months</CardDescription>
+            <CardDescription>Monthly revenue over the last 12 months</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-slate-500">
-              Chart placeholder - Stripe integration
-            </div>
+            <RevenueChart data={stats.revenueChartData} />
           </CardContent>
         </Card>
       </div>
