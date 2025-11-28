@@ -28,32 +28,18 @@ export async function middleware(request: NextRequest) {
   )
 
   // Refresh session if expired - required for Server Components
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /admin routes
+  // Protect /admin routes (but not login)
   if (request.nextUrl.pathname.startsWith('/admin') && request.nextUrl.pathname !== '/admin/login') {
-    if (error || !user) {
+    if (!user) {
       // No session - redirect to login
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/admin/login'
       redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
-
-    // Check if user has admin role
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!userData || userData.role !== 'admin') {
-      // Not an admin - redirect to login
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/admin/login'
-      redirectUrl.searchParams.set('error', 'unauthorized')
-      return NextResponse.redirect(redirectUrl)
-    }
+    // Role check is done in the admin layout server component, not here
   }
 
   return supabaseResponse
