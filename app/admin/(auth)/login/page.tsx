@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { loginAction } from './actions'
 import { Button } from '@/components/ui/button'
@@ -30,7 +31,7 @@ const errorMessages: Record<string, string> = {
   not_admin: 'You do not have admin privileges',
 }
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
   const errorMessage = errorParam ? errorMessages[errorParam] || decodeURIComponent(errorParam) : null
@@ -89,5 +90,17 @@ export default function AdminLoginPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
