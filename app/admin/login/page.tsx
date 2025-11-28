@@ -22,9 +22,18 @@ function SubmitButton() {
   )
 }
 
+const errorMessages: Record<string, string> = {
+  unauthorized: 'You do not have permission to access the admin panel',
+  missing_credentials: 'Email and password are required',
+  authentication_failed: 'Authentication failed',
+  unable_to_verify: 'Unable to verify admin privileges',
+  not_admin: 'You do not have admin privileges',
+}
+
 export default function AdminLoginPage() {
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
+  const errorMessage = errorParam ? errorMessages[errorParam] || decodeURIComponent(errorParam) : null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
@@ -39,12 +48,10 @@ export default function AdminLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {errorParam === 'unauthorized' && (
+          {errorMessage && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                You do not have permission to access the admin panel
-              </AlertDescription>
+              <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
 

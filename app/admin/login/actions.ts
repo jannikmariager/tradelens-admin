@@ -8,7 +8,7 @@ export async function loginAction(formData: FormData) {
   const password = formData.get('password') as string
 
   if (!email || !password) {
-    return { error: 'Email and password are required' }
+    redirect('/admin/login?error=missing_credentials')
   }
 
   const supabase = await createClient()
@@ -20,11 +20,11 @@ export async function loginAction(formData: FormData) {
   })
 
   if (authError) {
-    return { error: authError.message }
+    redirect('/admin/login?error=' + encodeURIComponent(authError.message))
   }
 
   if (!authData.user) {
-    return { error: 'Authentication failed' }
+    redirect('/admin/login?error=authentication_failed')
   }
 
   // Check admin role
@@ -36,12 +36,12 @@ export async function loginAction(formData: FormData) {
 
   if (userError || !userData) {
     await supabase.auth.signOut()
-    return { error: 'Unable to verify admin privileges' }
+    redirect('/admin/login?error=unable_to_verify')
   }
 
   if (userData.role !== 'admin') {
     await supabase.auth.signOut()
-    return { error: 'You do not have admin privileges' }
+    redirect('/admin/login?error=not_admin')
   }
 
   // Success - redirect will be handled by middleware
