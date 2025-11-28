@@ -2,8 +2,10 @@ import Stripe from 'stripe';
 import { createClient } from './supabase/server';
 
 // Initialize Stripe with secret key from environment
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia',
+// Use a dummy key for build time if not available
+const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_build';
+const stripe = new Stripe(stripeKey, {
+  apiVersion: '2025-11-17.clover',
 });
 
 export interface RevenueMetrics {
