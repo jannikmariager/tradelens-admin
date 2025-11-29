@@ -8,15 +8,18 @@ export interface TradingSignal {
   signal: 'BUY' | 'SELL' | 'HOLD' | 'NEUTRAL';
   confidence: number; // 0-100
   currentPrice: number;
-  targetPrice?: number;
+  targetPrice1?: number; // First target
+  targetPrice2?: number; // Second target (optional)
   stopLoss?: number;
   timeframe: string;
-  reasons: string[];
+  reasons: string[]; // Should have exactly 4 analysis points
   correctionRisk?: number;
+  entryRange?: string; // e.g. "$180-$182"
+  trigger?: string; // Entry trigger condition
   smcData?: {
-    orderBlocks?: string[];
-    fairValueGaps?: string[];
-    liquidityZones?: string[];
+    orderBlocks?: string[]; // Array of OB levels
+    fairValueGaps?: string[]; // Array of FVG levels
+    liquidityZones?: string[]; // Array of liquidity levels
   };
 }
 
@@ -33,7 +36,7 @@ function formatSignalEmbed(signal: TradingSignal) {
 
   const signalEmojis = {
     BUY: '🟢',
-    SELL: '🔴',
+    SELL: '🔻',
     HOLD: '🟡',
     NEUTRAL: '⚪',
   };
@@ -46,9 +49,13 @@ function formatSignalEmbed(signal: TradingSignal) {
   description += `**Confidence:** ${signal.confidence}%\n`;
   description += `**Timeframe:** ${signal.timeframe}\n`;
 
-  if (signal.targetPrice) {
-    description += `**Target:** $${signal.targetPrice.toFixed(2)}\n`;
+  // Targets (TP1 → TP2 format)
+  if (signal.targetPrice1 && signal.targetPrice2) {
+    description += `**Targets:** $${signal.targetPrice1.toFixed(2)} → $${signal.targetPrice2.toFixed(2)}\n`;
+  } else if (signal.targetPrice1) {
+    description += `**Target:** $${signal.targetPrice1.toFixed(2)}\n`;
   }
+
   if (signal.stopLoss) {
     description += `**Stop Loss:** $${signal.stopLoss.toFixed(2)}\n`;
   }

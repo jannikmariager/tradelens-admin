@@ -14,7 +14,8 @@ async function testDiscordSignal() {
     signal: 'BUY' as const,
     confidence: 85,
     currentPrice: 182.45,
-    targetPrice: 188.00,
+    targetPrice1: 186.00,
+    targetPrice2: 188.00,
     stopLoss: 179.50,
     timeframe: '1h',
     reasons: [
@@ -24,9 +25,11 @@ async function testDiscordSignal() {
       'RSI showing strong momentum',
     ],
     correctionRisk: 15,
+    entryRange: '$182-$183',
+    trigger: 'Break above $183 with volume confirmation',
     smcData: {
       orderBlocks: ['$180.20', '$178.50'],
-      fairValueGaps: ['$181.00 - $182.00'],
+      fairValueGaps: ['$181.00-$182.00'],
       liquidityZones: ['$177.00'],
     },
   };
