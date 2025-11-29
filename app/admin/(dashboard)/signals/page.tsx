@@ -5,23 +5,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BarChart3, TrendingUp, TrendingDown, Activity } from 'lucide-react'
 import { KPITile } from '@/components/admin/kpi-tile'
 import { formatDistanceToNow } from 'date-fns'
+import { TradingStyleFilter } from '@/components/admin/trading-style-filter'
 
-async function getSignalStats() {
+async function getSignalStats(tradingStyleFilter?: string | null) {
   const supabase = await createAdminClient()
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
   // Get signals generated today
-  const { count: signalsToday } = await supabase
+  let todayQuery = supabase
     .from('ai_signals')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', oneDayAgo)
+  
+  if (tradingStyleFilter && tradingStyleFilter !== 'all') {
+    todayQuery = todayQuery.eq('trading_style', tradingStyleFilter)
+  }
+  
+  const { count: signalsToday } = await todayQuery
 
   // Get average confidence score
-  const { data: signalsData } = await supabase
+  let confidenceQuery = supabase
     .from('ai_signals')
-    .select('confidence_score, signal_type')
+    .select('confidence_score, signal_type, trading_style')
     .gte('created_at', oneDayAgo)
+  
+  if (tradingStyleFilter && tradingStyleFilter !== 'all') {
+    confidenceQuery = confidenceQuery.eq('trading_style', tradingStyleFilter)
+  }
+  
+  const { data: signalsData } = await confidenceQuery
 
   const avgConfidence = signalsData?.length
     ? signalsData.reduce((sum, s) => sum + (s.confidence_score || 0), 0) / signalsData.length
@@ -30,25 +43,43 @@ async function getSignalStats() {
   // Get signal type breakdown
   const buySignals = signalsData?.filter(s => s.signal_type === 'buy').length || 0
   const sellSignals = signalsData?.filter(s => s.signal_type === 'sell').length || 0
+  
+  // Get trading style breakdown
+  const daytrade = signalsData?.filter(s => s.trading_style === 'daytrade').length || 0
+  const swing = signalsData?.filter(s => s.trading_style === 'swing').length || 0
+  const invest = signalsData?.filter(s => s.trading_style === 'invest').length || 0
 
   // Get recent signals
-  const { data: recentSignals } = await supabase
+  let recentQuery = supabase
     .from('ai_signals')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(100)
+  
+  if (tradingStyleFilter && tradingStyleFilter !== 'all') {
+    recentQuery = recentQuery.eq('trading_style', tradingStyleFilter)
+  }
+  
+  const { data: recentSignals } = await recentQuery
 
   return {
     signalsToday: signalsToday || 0,
     avgConfidence,
     buySignals,
     sellSignals,
+    daytrade,
+    swing,
+    invest,
     recentSignals: recentSignals || [],
   }
 }
 
-export default async function SignalsPage() {
-  const stats = await getSignalStats()
+export default async function SignalsPage({
+  searchParams,
+}: {
+  searchParams: { tradingStyle?: string }
+}) {
+  const stats = await getSignalStats(searchParams.tradingStyle)
 
   const getSignalColor = (signalType: string) => {
     if (signalType === 'buy') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -60,6 +91,37 @@ export default async function SignalsPage() {
     if (signalType === 'buy') return TrendingUp
     if (signalType === 'sell') return TrendingDown
     return Activity
+  }
+  
+  const getTradingStyleBadge = (style: string | null) => {
+    if (!style) style = 'swing'
+    
+    switch (style) {
+      case 'daytrade':
+        return (
+          <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
+            ⚡ DT
+          </Badge>
+        )
+      case 'swing':
+        return (
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+            🔁 SW
+          </Badge>
+        )
+      case 'invest':
+        return (
+          <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+            🏦 INV
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="bg-slate-500/10 text-slate-400 border-slate-500/20">
+            {style}
+          </Badge>
+        )
+    }
   }
 
   return (
@@ -96,12 +158,50 @@ export default async function SignalsPage() {
           icon={TrendingDown}
         />
       </div>
+      
+      {/* Trading Style Breakdown */}
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader>
+          <CardTitle className="text-white">Trading Style Breakdown</CardTitle>
+          <CardDescription>Signal distribution by trading style (last 24h)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-red-500/5 border border-red-500/20">
+              <div>
+                <div className="text-sm text-slate-400">Daytrade</div>
+                <div className="text-2xl font-bold text-white">{stats.daytrade}</div>
+              </div>
+              <div className="text-red-400 text-3xl">⚡</div>
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+              <div>
+                <div className="text-sm text-slate-400">Swingtrade</div>
+                <div className="text-2xl font-bold text-white">{stats.swing}</div>
+              </div>
+              <div className="text-blue-400 text-3xl">🔁</div>
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div>
+                <div className="text-sm text-slate-400">Investing</div>
+                <div className="text-2xl font-bold text-white">{stats.invest}</div>
+              </div>
+              <div className="text-purple-400 text-3xl">🏦</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Signals Table */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle className="text-white">Recent Signals</CardTitle>
-          <CardDescription>Latest AI-generated trading signals</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-white">Recent Signals</CardTitle>
+              <CardDescription>Latest AI-generated trading signals</CardDescription>
+            </div>
+            <TradingStyleFilter currentStyle={searchParams.tradingStyle} />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -109,6 +209,7 @@ export default async function SignalsPage() {
               <TableRow className="border-slate-800 hover:bg-slate-800/50">
                 <TableHead className="text-slate-300">Symbol</TableHead>
                 <TableHead className="text-slate-300">Signal</TableHead>
+                <TableHead className="text-slate-300">Style</TableHead>
                 <TableHead className="text-slate-300">Timeframe</TableHead>
                 <TableHead className="text-slate-300 text-right">Confidence</TableHead>
                 <TableHead className="text-slate-300 text-right">Risk</TableHead>
@@ -118,7 +219,7 @@ export default async function SignalsPage() {
             <TableBody>
               {stats.recentSignals.length === 0 ? (
                 <TableRow className="border-slate-800">
-                  <TableCell colSpan={6} className="text-center text-slate-400 py-8">
+                  <TableCell colSpan={7} className="text-center text-slate-400 py-8">
                     No signals found
                   </TableCell>
                 </TableRow>
@@ -135,6 +236,9 @@ export default async function SignalsPage() {
                           <SignalIcon className="h-3 w-3 mr-1" />
                           {signal.signal_type}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {getTradingStyleBadge(signal.trading_style)}
                       </TableCell>
                       <TableCell className="text-slate-400">
                         {signal.timeframe || '1h'}
