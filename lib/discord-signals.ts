@@ -103,7 +103,53 @@ function formatSignalEmbed(signal: TradingSignal) {
 }
 
 /**
- * Post trading signal to Discord channel
+ * Save signal to database via Edge Function
+ */
+async function saveSignalToDatabase(signal: TradingSignal): Promise<boolean> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      console.warn('Supabase credentials not configured, skipping database save');
+      return false;
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/save_signal`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({
+        ticker: signal.symbol,
+        direction: signal.signal,
+        entry_price: signal.currentPrice,
+        tp1: signal.targetPrice1,
+        tp2: signal.targetPrice2,
+        sl: signal.stopLoss,
+        confidence: signal.confidence,
+        timeframe: signal.timeframe,
+        reasons: signal.reasons,
+        smc_data: signal.smcData,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to save signal to database:', response.statusText);
+      return false;
+    }
+
+    console.log(`✅ Saved ${signal.signal} signal for ${signal.symbol} to database`);
+    return true;
+  } catch (error) {
+    console.error('Error saving signal to database:', error);
+    return false;
+  }
+}
+
+/**
+ * Post trading signal to Discord channel AND save to database
  */
 export async function postTradingSignal(signal: TradingSignal): Promise<boolean> {
   try {
@@ -116,6 +162,7 @@ export async function postTradingSignal(signal: TradingSignal): Promise<boolean>
 
     const payload = formatSignalEmbed(signal);
 
+    // Post to Discord
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -130,6 +177,10 @@ export async function postTradingSignal(signal: TradingSignal): Promise<boolean>
     }
 
     console.log(`✅ Posted ${signal.signal} signal for ${signal.symbol} to Discord`);
+
+    // Save to database (don't fail if this fails)
+    await saveSignalToDatabase(signal);
+
     return true;
   } catch (error) {
     console.error('Error posting signal to Discord:', error);
