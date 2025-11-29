@@ -8,6 +8,14 @@ export interface DiscordStats {
   messagesGrowth: number;
 }
 
+export interface DiscordGuildInfo {
+  id: string;
+  name: string;
+  memberCount: number;
+  onlineCount: number;
+  iconUrl?: string;
+}
+
 export interface DiscordActivity {
   date: string;
   messages: number;
@@ -15,50 +23,119 @@ export interface DiscordActivity {
 }
 
 /**
- * Get Discord server stats from discord_activity table
+ * Fetch guild info directly from Discord API
+ */
+export async function fetchDiscordGuildInfo(): Promise<DiscordGuildInfo | null> {
+  try {
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    const guildId = process.env.DISCORD_GUILD_ID;
+
+    if (!botToken || !guildId) {
+      console.error('Discord credentials missing');
+      return null;
+    }
+
+    const response = await fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
+      headers: {
+        Authorization: `Bot ${botToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch Discord guild:', response.statusText);
+      return null;
+    }
+
+    const guild = await response.json();
+
+    return {
+      id: guild.id,
+      name: guild.name,
+      memberCount: guild.approximate_member_count || 0,
+      onlineCount: guild.approximate_presence_count || 0,
+      iconUrl: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : undefined,
+    };
+  } catch (error) {
+    console.error('Error fetching Discord guild info:', error);
+    return null;
+  }
+}
+
+/**
+ * Get Discord server stats (combines API data with database records)
  */
 export async function getDiscordStats(): Promise<DiscordStats> {
+  try {
+    // Fetch real-time data from Discord API
+    const guildInfo = await fetchDiscordGuildInfo();
+    
+    if (!guildInfo) {
+      // Fallback to database if API fails
+      return getDiscordStatsFromDB();
+    }
+
+    const supabase = await createClient();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    // Get yesterday's member count for growth calculation
+    const { data: yesterdayData } = await supabase
+      .from('discord_activity')
+      .select('member_count')
+      .gte('timestamp', yesterday.toISOString())
+      .lt('timestamp', new Date(yesterday.getTime() + 86400000).toISOString())
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single();
+
+    const newMembersToday = guildInfo.memberCount - (yesterdayData?.member_count || guildInfo.memberCount);
+
+    return {
+      totalMembers: guildInfo.memberCount,
+      activeMembers: guildInfo.onlineCount,
+      totalMessages: 0, // Would need message tracking
+      newMembersToday,
+      messagesGrowth: 0, // Would need message tracking
+    };
+  } catch (error) {
+    console.error('Error fetching Discord stats:', error);
+    return {
+      totalMembers: 0,
+      activeMembers: 0,
+      totalMessages: 0,
+      newMembersToday: 0,
+      messagesGrowth: 0,
+    };
+  }
+}
+
+/**
+ * Get Discord stats from database (fallback)
+ */
+async function getDiscordStatsFromDB(): Promise<DiscordStats> {
   try {
     const supabase = await createClient();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
 
-    // Get today's stats
     const { data: todayData } = await supabase
       .from('discord_activity')
       .select('*')
       .gte('timestamp', today.toISOString())
+      .order('timestamp', { ascending: false })
+      .limit(1)
       .single();
-
-    // Get yesterday's stats for growth calculation
-    const { data: yesterdayData } = await supabase
-      .from('discord_activity')
-      .select('*')
-      .gte('timestamp', yesterday.toISOString())
-      .lt('timestamp', today.toISOString())
-      .single();
-
-    // Get total members (assuming we track this)
-    const { count: totalMembers } = await supabase
-      .from('discord_activity')
-      .select('member_count', { count: 'exact', head: true });
-
-    // Calculate message growth
-    const todayMessages = todayData?.message_count || 0;
-    const yesterdayMessages = yesterdayData?.message_count || 1;
-    const messagesGrowth = ((todayMessages - yesterdayMessages) / yesterdayMessages) * 100;
 
     return {
       totalMembers: todayData?.member_count || 0,
       activeMembers: todayData?.active_member_count || 0,
-      totalMessages: todayMessages,
-      newMembersToday: (todayData?.member_count || 0) - (yesterdayData?.member_count || 0),
-      messagesGrowth: Math.round(messagesGrowth * 100) / 100,
+      totalMessages: todayData?.message_count || 0,
+      newMembersToday: 0,
+      messagesGrowth: 0,
     };
   } catch (error) {
-    console.error('Error fetching Discord stats:', error);
+    console.error('Error fetching Discord stats from DB:', error);
     return {
       totalMembers: 0,
       activeMembers: 0,
