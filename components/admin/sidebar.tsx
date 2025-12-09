@@ -28,6 +28,7 @@ const navigation = [
   { name: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { name: 'AI Tokens', href: '/admin/ai-tokens', icon: Cpu },
   { name: 'Data Costs', href: '/admin/data-costs', icon: Database },
+  { name: 'Engines', href: '/admin/engines', icon: Cpu },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
   { name: 'Discord', href: '/admin/discord', icon: MessageSquare },

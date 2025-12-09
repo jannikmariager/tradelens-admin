@@ -83,7 +83,7 @@ export default async function SignalsPage({
 
   const getSignalColor = (signalType: string) => {
     if (signalType === 'buy') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-    if (signalType === 'sell') return 'bg-red-500/10 text-red-400 border-red-500/20'
+    if (signalType === 'sell') return 'bg-red-500/10 text-red-300 border-red-500/20'
     return 'bg-slate-500/10 text-slate-400 border-slate-500/20'
   }
 
@@ -100,19 +100,19 @@ export default async function SignalsPage({
       case 'daytrade':
         return (
           <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
-            ⚡ DT
+            DT
           </Badge>
         )
       case 'swing':
         return (
           <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
-            🔁 SW
+            SW
           </Badge>
         )
       case 'invest':
         return (
           <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
-            🏦 INV
+            INV
           </Badge>
         )
       default:
@@ -172,21 +172,21 @@ export default async function SignalsPage({
                 <div className="text-sm text-slate-400">Daytrade</div>
                 <div className="text-2xl font-bold text-white">{stats.daytrade}</div>
               </div>
-              <div className="text-red-400 text-3xl">⚡</div>
+              <div className="text-red-400 text-sm font-semibold">DT</div>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
               <div>
                 <div className="text-sm text-slate-400">Swingtrade</div>
                 <div className="text-2xl font-bold text-white">{stats.swing}</div>
               </div>
-              <div className="text-blue-400 text-3xl">🔁</div>
+              <div className="text-blue-400 text-sm font-semibold">SW</div>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
               <div>
                 <div className="text-sm text-slate-400">Investing</div>
                 <div className="text-2xl font-bold text-white">{stats.invest}</div>
               </div>
-              <div className="text-purple-400 text-3xl">🏦</div>
+              <div className="text-purple-400 text-sm font-semibold">INV</div>
             </div>
           </div>
         </CardContent>
@@ -243,7 +243,7 @@ export default async function SignalsPage({
                       <TableCell className="text-slate-400">
                         {signal.timeframe || '1h'}
                       </TableCell>
-                      <TableCell className="text-right text-emerald-400 font-medium">
+                      <TableCell className="text-right text-emerald-300 font-medium">
                         {signal.confidence_score?.toFixed(1)}%
                       </TableCell>
                       <TableCell className="text-right text-yellow-400">
