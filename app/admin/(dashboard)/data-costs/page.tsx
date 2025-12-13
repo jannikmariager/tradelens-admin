@@ -53,8 +53,8 @@ export default async function DataCostsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Data Provider Costs</h1>
-        <p className="text-slate-400 mt-1">Monitor external API usage and costs</p>
+        <h1 className="text-3xl font-bold text-foreground">Data Provider Costs</h1>
+        <p className="text-muted-foreground mt-1">Monitor external API usage and costs</p>
       </div>
 
       {/* KPIs */}
@@ -86,50 +86,50 @@ export default async function DataCostsPage() {
       </div>
 
       {/* Costs Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Provider Costs</CardTitle>
+          <CardTitle>Provider Costs</CardTitle>
           <CardDescription>Recent API usage and costs by provider</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300">Provider</TableHead>
-                <TableHead className="text-slate-300 text-right">Requests</TableHead>
-                <TableHead className="text-slate-300 text-right">Cost</TableHead>
-                <TableHead className="text-slate-300">Period</TableHead>
-                <TableHead className="text-slate-300">Time</TableHead>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Provider</TableHead>
+                <TableHead className="text-muted-foreground text-right">Requests</TableHead>
+                <TableHead className="text-muted-foreground text-right">Cost</TableHead>
+                <TableHead className="text-muted-foreground">Period</TableHead>
+                <TableHead className="text-muted-foreground">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.recentCosts.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={5} className="text-center text-slate-400 py-8">
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No cost data found
                   </TableCell>
                 </TableRow>
               ) : (
                 stats.recentCosts.map((cost: any) => (
-                  <TableRow key={cost.id} className="border-slate-800 hover:bg-slate-800/50">
+                  <TableRow key={cost.id}>
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className="bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        className="bg-purple-500/10 text-purple-700 border-purple-500/20 dark:text-purple-300"
                       >
                         {cost.provider_name || 'Unknown'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-white">
+                    <TableCell className="text-right text-foreground">
                       {(cost.request_count || 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right text-emerald-400 font-medium">
+                    <TableCell className="text-right text-emerald-700 dark:text-emerald-300 font-medium">
                       ${(cost.cost_usd || 0).toFixed(4)}
                     </TableCell>
-                    <TableCell className="text-slate-400">
+                    <TableCell className="text-muted-foreground">
                       {cost.period || 'daily'}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {cost.timestamp
                         ? formatDistanceToNow(new Date(cost.timestamp), { addSuffix: true })
                         : 'Unknown'}

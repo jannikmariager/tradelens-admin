@@ -6,7 +6,7 @@ export interface VariantAggregateRow {
   avg_avg_rr: number | null
   avg_total_return: number | null
   avg_drawdown: number | null
-  avg_sharpe: number | null
+  avg_profit_factor: number | null
   signals_per_ticker: number | null
   trades_per_ticker: number | null
 }
@@ -19,7 +19,7 @@ export function scoreVariant(v: VariantAggregateRow): number {
   const win = v.avg_win_rate ?? 0
   const exp = v.avg_expectancy ?? 0
   const rr = v.avg_avg_rr ?? 0
-  const sharpe = v.avg_sharpe ?? 0
+  const pf = v.avg_profit_factor ?? 0
   const dd = v.avg_drawdown ?? 50
   const trades = v.trades_per_ticker ?? 0
 
@@ -27,7 +27,7 @@ export function scoreVariant(v: VariantAggregateRow): number {
     win * 0.25 +
     exp * 0.25 +
     rr * 0.15 +
-    sharpe * 0.2 -
+    pf * 0.2 -
     dd * 0.1 +
     Math.min(trades / 30, 0.05)
   )

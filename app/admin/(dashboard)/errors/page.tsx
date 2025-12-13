@@ -54,11 +54,11 @@ export default async function ErrorsPage() {
       case 'error':
       case 'api_down':
       case 'payment_failed':
-        return 'bg-red-500/10 text-red-400 border-red-500/20'
+        return 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-300'
       case 'anomaly':
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+        return 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300'
       default:
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+        return 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300'
     }
   }
 
@@ -66,8 +66,8 @@ export default async function ErrorsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">System Alerts & Errors</h1>
-        <p className="text-slate-400 mt-1">Monitor system health and resolve issues</p>
+        <h1 className="text-3xl font-bold text-foreground">System Alerts & Errors</h1>
+        <p className="text-muted-foreground mt-1">Monitor system health and resolve issues</p>
       </div>
 
       {/* KPIs */}
@@ -92,61 +92,63 @@ export default async function ErrorsPage() {
       </div>
 
       {/* Alerts Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Recent Alerts</CardTitle>
+          <CardTitle>Recent Alerts</CardTitle>
           <CardDescription>System errors, anomalies, and warnings</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300">Type</TableHead>
-                <TableHead className="text-slate-300">Message</TableHead>
-                <TableHead className="text-slate-300">Status</TableHead>
-                <TableHead className="text-slate-300">Time</TableHead>
-                <TableHead className="text-slate-300">Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Type</TableHead>
+                <TableHead className="text-muted-foreground">Message</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Time</TableHead>
+                <TableHead className="text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.alerts.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={5} className="text-center text-slate-400 py-8">
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No alerts found
                   </TableCell>
                 </TableRow>
               ) : (
                 stats.alerts.map((alert: any) => (
-                  <TableRow key={alert.id} className="border-slate-800 hover:bg-slate-800/50">
+                  <TableRow key={alert.id}>
                     <TableCell>
                       <Badge variant="secondary" className={getAlertColor(alert.type)}>
                         {alert.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-white max-w-md">
-                      <div className="truncate">{alert.message}</div>
+                    <TableCell className="text-foreground max-w-md align-top">
+                      <div className="max-h-40 overflow-y-auto whitespace-pre-wrap text-xs text-muted-foreground pr-1">
+                        {alert.message}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {alert.resolved ? (
-                        <div className="flex items-center gap-2 text-emerald-400">
+                        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                           <CheckCircle className="h-4 w-4" />
                           <span className="text-sm">Resolved</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-yellow-400">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                           <AlertTriangle className="h-4 w-4" />
                           <span className="text-sm">Active</span>
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {alert.timestamp
                         ? formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })
                         : 'Unknown'}
                     </TableCell>
                     <TableCell>
                       {!alert.resolved && (
-                        <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300">
+                        <Button variant="ghost" size="sm" className="text-emerald-700 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200">
                           Resolve
                         </Button>
                       )}

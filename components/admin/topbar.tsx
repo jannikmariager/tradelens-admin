@@ -30,15 +30,15 @@ export function Topbar({ userEmail }: TopbarProps) {
   }
 
   return (
-    <div className="flex h-16 items-center gap-4 border-b border-slate-800 bg-slate-900 px-6">
+    <div className="flex h-16 items-center gap-4 border-b border-border bg-background px-6">
       {/* Search */}
       <div className="flex flex-1 items-center gap-2">
         <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search users, signals, errors..."
-            className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
+            className="pl-10"
           />
         </div>
       </div>
@@ -46,7 +46,7 @@ export function Topbar({ userEmail }: TopbarProps) {
       {/* Actions */}
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <Bell className="h-5 w-5" />
         </Button>
 
@@ -65,7 +65,7 @@ export function Topbar({ userEmail }: TopbarProps) {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-slate-500">{userEmail}</p>
+                <p className="text-xs text-muted-foreground">{userEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

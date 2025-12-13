@@ -34,32 +34,32 @@ export function VariantHeatmap({ rows, metric, selectedVariant, onSelectVariant 
   const min = values.length ? Math.min(...values) : 0
 
   const classify = (v: number | null | undefined): string => {
-    if (v == null || Number.isNaN(v)) return 'bg-slate-800'
+    if (v == null || Number.isNaN(v)) return 'bg-slate-100 text-slate-400'
     if (metric === 'expectancy') {
-      if (v >= 0.15) return 'bg-green-500/20'
-      if (v >= 0.05) return 'bg-yellow-500/20'
-      if (v <= -0.05) return 'bg-red-500/20'
-      return 'bg-yellow-500/20'
+      if (v >= 0.15) return 'bg-green-100 text-green-800'
+      if (v >= 0.05) return 'bg-yellow-100 text-yellow-800'
+      if (v <= -0.05) return 'bg-red-100 text-red-800'
+      return 'bg-yellow-100 text-yellow-800'
     }
-    if (v >= 30) return 'bg-green-500/20'
-    if (v >= 10) return 'bg-yellow-500/20'
-    if (v <= -10) return 'bg-red-500/20'
-    return 'bg-yellow-500/20'
+    if (v >= 30) return 'bg-green-100 text-green-800'
+    if (v >= 10) return 'bg-yellow-100 text-yellow-800'
+    if (v <= -10) return 'bg-red-100 text-red-800'
+    return 'bg-yellow-100 text-yellow-800'
   }
 
   return (
-    <Card className="rounded-2xl shadow-md bg-slate-900/80 border-slate-800">
+    <Card className="rounded-2xl shadow-md bg-white border-slate-200">
       <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <CardTitle className="text-base text-slate-50">Variant Heatmap</CardTitle>
-          <CardDescription className="text-xs text-slate-400">
+          <CardTitle className="text-base text-slate-900">Variant Heatmap</CardTitle>
+          <CardDescription className="text-xs text-slate-500">
             {metric === 'expectancy'
               ? 'Expectancy (R per trade) across tickers and timeframes.'
               : 'Total return (%) across tickers and timeframes.'}
           </CardDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400">Variant</span>
+          <span className="text-xs text-slate-600">Variant</span>
           <div className="flex flex-wrap gap-2">
             {variants.map((v) => (
               <Badge
@@ -76,18 +76,42 @@ export function VariantHeatmap({ rows, metric, selectedVariant, onSelectVariant 
       </CardHeader>
       <CardContent className="space-y-4">
         {activeVariant == null || tickers.length === 0 ? (
-          <p className="text-sm text-slate-400">No data available yet.</p>
+          <p className="text-sm text-slate-500">No data available yet.</p>
         ) : (
           <div className="space-y-3">
-            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/80 p-3">
-              <table className="min-w-full border-collapse text-xs text-slate-100">
+            <style jsx>{`
+              .heatmap-scroll::-webkit-scrollbar {
+                width: 12px;
+                height: 12px;
+              }
+              .heatmap-scroll::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 8px;
+              }
+              .heatmap-scroll::-webkit-scrollbar-thumb {
+                background: #94a3b8;
+                border-radius: 8px;
+              }
+              .heatmap-scroll::-webkit-scrollbar-thumb:hover {
+                background: #64748b;
+              }
+            `}</style>
+            <div 
+              className="heatmap-scroll overflow-auto rounded-2xl border border-slate-200 bg-white p-3"
+              style={{
+                maxHeight: '600px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#94a3b8 #f1f5f9'
+              }}
+            >
+              <table className="min-w-full border-collapse text-xs text-slate-900">
                 <thead>
                   <tr>
-                    <th className="px-2 py-1 text-left text-[11px] text-slate-400">Ticker / TF</th>
+                    <th className="px-2 py-1 text-left text-[11px] text-slate-600 font-semibold">Ticker / TF</th>
                     {timeframes.map((tf) => (
                       <th
                         key={tf}
-                        className="px-2 py-1 text-center text-[11px] font-medium text-slate-400"
+                        className="px-2 py-1 text-center text-[11px] font-semibold text-slate-600"
                       >
                         {tf}
                       </th>
@@ -96,8 +120,8 @@ export function VariantHeatmap({ rows, metric, selectedVariant, onSelectVariant 
                 </thead>
                 <tbody>
                   {tickers.map((ticker) => (
-                    <tr key={ticker} className="border-t border-slate-800/60">
-                      <td className="px-2 py-1 text-[11px] font-medium text-slate-200">
+                    <tr key={ticker} className="border-t border-slate-200">
+                      <td className="px-2 py-1 text-[11px] font-semibold text-slate-700">
                         {ticker}
                       </td>
                       {timeframes.map((tf) => {
@@ -117,7 +141,7 @@ export function VariantHeatmap({ rows, metric, selectedVariant, onSelectVariant 
                             }
                           >
                             <div
-                              className={`flex h-8 items-center justify-center rounded-xl text-[11px] font-medium ${cls}`}
+                              className={`flex h-8 items-center justify-center rounded-xl text-[11px] font-semibold ${cls}`}
                             >
                               {v == null
                                 ? '–'
@@ -133,9 +157,9 @@ export function VariantHeatmap({ rows, metric, selectedVariant, onSelectVariant 
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
+            <div className="flex items-center justify-between text-[11px] text-slate-600">
               <span>
-                Active variant: <span className="font-medium text-slate-100">{activeVariant}</span>
+                Active variant: <span className="font-semibold text-slate-900">{activeVariant}</span>
               </span>
               <span>
                 Range: {min.toFixed(2)} – {max.toFixed(2)} {metric === 'expectancy' ? 'R' : '%'}

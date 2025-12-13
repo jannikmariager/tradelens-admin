@@ -91,8 +91,8 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">
           Overview of TradeLens AI system metrics
         </p>
       </div>
@@ -140,9 +140,9 @@ export default async function AdminDashboardPage() {
 
       {/* Charts Section */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">User Growth</CardTitle>
+            <CardTitle>User Growth</CardTitle>
             <CardDescription>Total users over the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
@@ -150,9 +150,9 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Revenue Trend</CardTitle>
+            <CardTitle>Revenue Trend</CardTitle>
             <CardDescription>Monthly revenue over the last 12 months</CardDescription>
           </CardHeader>
           <CardContent>
@@ -162,14 +162,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Recent Activity */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Recent Activity</CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
           <CardDescription>Latest system events and user actions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="text-slate-400 text-sm">
+            <div className="text-muted-foreground text-sm">
               Activity feed will be implemented with real-time data
             </div>
           </div>

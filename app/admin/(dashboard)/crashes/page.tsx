@@ -48,8 +48,8 @@ export default async function CrashesPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Crash Reports</h1>
-        <p className="text-slate-400 mt-1">Monitor mobile app crashes and stability</p>
+        <h1 className="text-3xl font-bold text-foreground">Crash Reports</h1>
+        <p className="text-muted-foreground mt-1">Monitor mobile app crashes and stability</p>
       </div>
 
       {/* KPIs */}
@@ -81,54 +81,54 @@ export default async function CrashesPage() {
       </div>
 
       {/* Crashes Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Recent Crashes</CardTitle>
+          <CardTitle>Recent Crashes</CardTitle>
           <CardDescription>Latest mobile app crash reports</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300">Platform</TableHead>
-                <TableHead className="text-slate-300">Device</TableHead>
-                <TableHead className="text-slate-300">OS Version</TableHead>
-                <TableHead className="text-slate-300">Error</TableHead>
-                <TableHead className="text-slate-300">Time</TableHead>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Platform</TableHead>
+                <TableHead className="text-muted-foreground">Device</TableHead>
+                <TableHead className="text-muted-foreground">OS Version</TableHead>
+                <TableHead className="text-muted-foreground">Error</TableHead>
+                <TableHead className="text-muted-foreground">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.recentCrashes.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={5} className="text-center text-slate-400 py-8">
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No crashes found 🎉
                   </TableCell>
                 </TableRow>
               ) : (
                 stats.recentCrashes.map((crash: any) => (
-                  <TableRow key={crash.id} className="border-slate-800 hover:bg-slate-800/50">
+                  <TableRow key={crash.id}>
                     <TableCell>
                       <Badge
                         variant="secondary"
                         className={
                           crash.platform === 'ios'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                            : 'bg-green-500/10 text-green-400 border-green-500/20'
+                            ? 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300'
+                            : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300'
                         }
                       >
                         {crash.platform}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-white">
+                    <TableCell className="text-foreground">
                       {crash.device || 'Unknown'}
                     </TableCell>
-                    <TableCell className="text-slate-400">
+                    <TableCell className="text-muted-foreground">
                       {crash.os_version || 'N/A'}
                     </TableCell>
-                    <TableCell className="text-slate-400 max-w-md">
+                    <TableCell className="text-muted-foreground max-w-md">
                       <div className="truncate">{crash.error_message || 'No message'}</div>
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {crash.timestamp
                         ? formatDistanceToNow(new Date(crash.timestamp), { addSuffix: true })
                         : 'Unknown'}

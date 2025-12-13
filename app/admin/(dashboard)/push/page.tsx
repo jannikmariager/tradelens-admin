@@ -8,8 +8,8 @@ export default function PushPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Push Notifications</h1>
-        <p className="text-slate-400 mt-1">Send targeted push notifications to users</p>
+        <h1 className="text-3xl font-bold text-foreground">Push Notifications</h1>
+        <p className="text-muted-foreground mt-1">Send targeted push notifications to users</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -19,32 +19,32 @@ export default function PushPage() {
         <KPITile title="Active Devices" value="8,234" icon={Users} />
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Send Push Notification</CardTitle>
+          <CardTitle>Send Push Notification</CardTitle>
           <CardDescription>Broadcast message to app users</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-300">Title</label>
+              <label className="text-sm font-medium">Title</label>
               <Input
                 placeholder="Market Alert"
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                className="mt-1"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300">Message</label>
+              <label className="text-sm font-medium">Message</label>
               <Input
                 placeholder="SPY broke above $450"
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                className="mt-1"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300">Audience</label>
-              <select className="mt-1 w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+              <label className="text-sm font-medium">Audience</label>
+              <select className="mt-1 w-full px-3 py-2 bg-background border border-input rounded-md text-foreground">
                 <option>All Users</option>
                 <option>Premium Users</option>
                 <option>Pro Users</option>

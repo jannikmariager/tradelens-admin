@@ -56,19 +56,19 @@ export default async function SubscriptionsPage() {
   const stats = await getSubscriptionStats()
 
   const getEventColor = (eventType: string) => {
-    if (eventType.includes('succeeded')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-    if (eventType.includes('failed')) return 'bg-red-500/10 text-red-400 border-red-500/20'
-    if (eventType.includes('created')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-    if (eventType.includes('canceled')) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-    return 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+    if (eventType.includes('succeeded')) return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300'
+    if (eventType.includes('failed')) return 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-300'
+    if (eventType.includes('created')) return 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300'
+    if (eventType.includes('canceled')) return 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300'
+    return 'bg-muted text-muted-foreground border-border'
   }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Subscriptions</h1>
-        <p className="text-slate-400 mt-1">Monitor subscription events and revenue</p>
+        <h1 className="text-3xl font-bold text-foreground">Subscriptions</h1>
+        <p className="text-muted-foreground mt-1">Monitor subscription events and revenue</p>
       </div>
 
       {/* KPIs */}
@@ -100,43 +100,43 @@ export default async function SubscriptionsPage() {
       </div>
 
       {/* Events Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Subscription Events</CardTitle>
+          <CardTitle>Subscription Events</CardTitle>
           <CardDescription>Recent Stripe webhook events</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300">Event Type</TableHead>
-                <TableHead className="text-slate-300">Amount</TableHead>
-                <TableHead className="text-slate-300">Country</TableHead>
-                <TableHead className="text-slate-300">Time</TableHead>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Event Type</TableHead>
+                <TableHead className="text-muted-foreground">Amount</TableHead>
+                <TableHead className="text-muted-foreground">Country</TableHead>
+                <TableHead className="text-muted-foreground">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.events.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={4} className="text-center text-slate-400 py-8">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No subscription events found
                   </TableCell>
                 </TableRow>
               ) : (
                 stats.events.map((event: any) => (
-                  <TableRow key={event.id} className="border-slate-800 hover:bg-slate-800/50">
+                  <TableRow key={event.id}>
                     <TableCell>
                       <Badge variant="secondary" className={getEventColor(event.event_type)}>
                         {event.event_type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-white font-medium">
+                    <TableCell className="font-medium">
                       {event.amount ? `$${(event.amount / 100).toFixed(2)}` : '-'}
                     </TableCell>
-                    <TableCell className="text-slate-400">
+                    <TableCell className="text-muted-foreground">
                       {event.country || 'Unknown'}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {event.timestamp
                         ? formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })
                         : 'Unknown'}

@@ -8,8 +8,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Settings</h1>
-        <p className="text-slate-400 mt-1">Configure system and admin settings</p>
+        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure system and admin settings</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -20,24 +20,24 @@ export default function SettingsPage() {
       </div>
 
       {/* Admin Users */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Admin Users</CardTitle>
+          <CardTitle>Admin Users</CardTitle>
           <CardDescription>Manage admin access and permissions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-emerald-400" />
+                  <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">jannikmariager@hotmail.com</p>
-                  <p className="text-sm text-slate-400">Super Admin</p>
+                  <p className="text-foreground font-medium">jannikmariager@hotmail.com</p>
+                  <p className="text-sm text-muted-foreground">Super Admin</p>
                 </div>
               </div>
-              <Button variant="outline" className="border-slate-700 text-slate-300">
+              <Button variant="outline">
                 Manage
               </Button>
             </div>
@@ -50,9 +50,9 @@ export default function SettingsPage() {
       </Card>
 
       {/* API Configuration */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">API Keys</CardTitle>
+          <CardTitle>API Keys</CardTitle>
           <CardDescription>Manage external service API keys</CardDescription>
         </CardHeader>
         <CardContent>
@@ -62,14 +62,14 @@ export default function SettingsPage() {
               { name: 'Stripe Secret Key', status: 'Active', masked: '••••••••••••5678' },
               { name: 'OpenAI API Key', status: 'Active', masked: '••••••••••••9012' },
             ].map((api, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+              <div key={i} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div>
-                  <p className="text-white font-medium">{api.name}</p>
-                  <p className="text-sm text-slate-400 font-mono">{api.masked}</p>
+                  <p className="text-foreground font-medium">{api.name}</p>
+                  <p className="text-sm text-muted-foreground font-mono">{api.masked}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-emerald-400 text-sm">{api.status}</span>
-                  <Button variant="ghost" size="sm" className="text-blue-400">
+                  <span className="text-emerald-700 dark:text-emerald-300 text-sm">{api.status}</span>
+                  <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
                     Update
                   </Button>
                 </div>
@@ -80,21 +80,21 @@ export default function SettingsPage() {
       </Card>
 
       {/* System Health */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">System Health</CardTitle>
+          <CardTitle>System Health</CardTitle>
           <CardDescription>Overall system status and checks</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[
-              { service: 'Supabase Database', status: 'Operational', color: 'text-emerald-400' },
-              { service: 'Edge Functions', status: 'Operational', color: 'text-emerald-400' },
-              { service: 'OpenAI API', status: 'Operational', color: 'text-emerald-400' },
-              { service: 'Stripe Integration', status: 'Operational', color: 'text-emerald-400' },
+              { service: 'Supabase Database', status: 'Operational', color: 'text-emerald-700 dark:text-emerald-300' },
+              { service: 'Edge Functions', status: 'Operational', color: 'text-emerald-700 dark:text-emerald-300' },
+              { service: 'OpenAI API', status: 'Operational', color: 'text-emerald-700 dark:text-emerald-300' },
+              { service: 'Stripe Integration', status: 'Operational', color: 'text-emerald-700 dark:text-emerald-300' },
             ].map((check, i) => (
               <div key={i} className="flex items-center justify-between">
-                <span className="text-slate-300">{check.service}</span>
+                <span className="text-foreground">{check.service}</span>
                 <span className={`font-medium ${check.color}`}>{check.status}</span>
               </div>
             ))}

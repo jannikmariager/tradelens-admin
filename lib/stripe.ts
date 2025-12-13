@@ -100,7 +100,7 @@ export async function calculateChurnRate(): Promise<number> {
       .from('subscription_logs')
       .select('id')
       .eq('event_type', 'subscription.deleted')
-      .gte('created_at', thirtyDaysAgo.toISOString());
+      .gte('timestamp', thirtyDaysAgo.toISOString());
 
     if (churnError) throw churnError;
 
@@ -109,7 +109,7 @@ export async function calculateChurnRate(): Promise<number> {
       .from('subscription_logs')
       .select('id')
       .eq('event_type', 'subscription.created')
-      .lte('created_at', thirtyDaysAgo.toISOString());
+      .lte('timestamp', thirtyDaysAgo.toISOString());
 
     if (totalError) throw totalError;
 
@@ -159,20 +159,20 @@ export async function calculateRevenueGrowth(): Promise<number> {
     // Get current month revenue
     const { data: currentRevenue } = await supabase
       .from('subscription_logs')
-      .select('amount')
-      .gte('created_at', currentMonthStart.toISOString())
+      .select('amount_usd')
+      .gte('timestamp', currentMonthStart.toISOString())
       .in('event_type', ['payment_intent.succeeded', 'invoice.payment_succeeded']);
 
     // Get last month revenue
     const { data: lastRevenue } = await supabase
       .from('subscription_logs')
-      .select('amount')
-      .gte('created_at', lastMonthStart.toISOString())
-      .lte('created_at', lastMonthEnd.toISOString())
+      .select('amount_usd')
+      .gte('timestamp', lastMonthStart.toISOString())
+      .lte('timestamp', lastMonthEnd.toISOString())
       .in('event_type', ['payment_intent.succeeded', 'invoice.payment_succeeded']);
 
-    const currentTotal = currentRevenue?.reduce((sum, log) => sum + (log.amount || 0), 0) || 0;
-    const lastTotal = lastRevenue?.reduce((sum, log) => sum + (log.amount || 0), 0) || 1;
+    const currentTotal = currentRevenue?.reduce((sum, log) => sum + (log.amount_usd || 0), 0) || 0;
+    const lastTotal = lastRevenue?.reduce((sum, log) => sum + (log.amount_usd || 0), 0) || 1;
 
     const growth = ((currentTotal - lastTotal) / lastTotal) * 100;
     return Math.round(growth * 100) / 100;
@@ -265,25 +265,25 @@ export async function getRevenueChartData(): Promise<RevenueChartData[]> {
       // Get revenue for this month
       const { data: payments } = await supabase
         .from('subscription_logs')
-        .select('amount')
-        .gte('created_at', monthStart.toISOString())
-        .lte('created_at', monthEnd.toISOString())
+        .select('amount_usd')
+        .gte('timestamp', monthStart.toISOString())
+        .lte('timestamp', monthEnd.toISOString())
         .in('event_type', ['payment_intent.succeeded', 'invoice.payment_succeeded']);
 
       // Get subscription count for this month
       const { data: subs } = await supabase
         .from('subscription_logs')
         .select('id')
-        .gte('created_at', monthStart.toISOString())
-        .lte('created_at', monthEnd.toISOString())
+        .gte('timestamp', monthStart.toISOString())
+        .lte('timestamp', monthEnd.toISOString())
         .eq('event_type', 'subscription.created');
 
-      const revenue = payments?.reduce((sum, log) => sum + (log.amount || 0), 0) || 0;
+      const revenue = payments?.reduce((sum, log) => sum + (log.amount_usd || 0), 0) || 0;
       const subscriptions = subs?.length || 0;
 
       data.push({
         date: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        revenue: Math.round(revenue / 100), // Convert cents to dollars
+        revenue: Math.round(revenue * 100) / 100, // amount_usd is already in dollars
         subscriptions,
       });
     }

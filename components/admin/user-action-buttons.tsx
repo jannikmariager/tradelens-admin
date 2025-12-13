@@ -50,7 +50,7 @@ export function UserActionButtons({ userId, currentRole, isDisabled }: UserActio
   return (
     <div className="flex items-center gap-2">
       <Select value={role} onValueChange={handleRoleChange} disabled={isLoading}>
-        <SelectTrigger className="w-32 bg-slate-800 border-slate-700">
+        <SelectTrigger className="w-32">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

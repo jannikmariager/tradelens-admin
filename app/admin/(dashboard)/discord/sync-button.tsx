@@ -34,7 +34,6 @@ export function SyncDiscordButton() {
       onClick={handleSync}
       disabled={isLoading}
       variant="outline"
-      className="bg-slate-800 border-slate-700 hover:bg-slate-700"
     >
       <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
       {isLoading ? 'Syncing...' : 'Sync Stats'}

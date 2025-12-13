@@ -18,7 +18,7 @@ type SortKey =
   | 'avg_avg_rr'
   | 'avg_total_return'
   | 'avg_drawdown'
-  | 'avg_sharpe'
+  | 'avg_profit_factor'
   | 'trades_per_ticker'
   | 'score'
 
@@ -74,7 +74,7 @@ export function VariantTable({ variants, onSelectVariant }: Props) {
               <th className="px-2 py-2">{headerButton('Avg RR', 'avg_avg_rr')}</th>
               <th className="px-2 py-2">{headerButton('Total Ret', 'avg_total_return')}</th>
               <th className="px-2 py-2">{headerButton('Drawdown', 'avg_drawdown')}</th>
-              <th className="px-2 py-2">{headerButton('Sharpe', 'avg_sharpe')}</th>
+              <th className="px-2 py-2">{headerButton('PF', 'avg_profit_factor')}</th>
               <th className="px-2 py-2">{headerButton('Trades', 'trades_per_ticker')}</th>
               <th className="px-2 py-2">{headerButton('Score', 'score')}</th>
               <th className="px-2 py-2 text-right">Details</th>
@@ -91,7 +91,7 @@ export function VariantTable({ variants, onSelectVariant }: Props) {
                   <td className="px-2 py-2 text-[11px]">{(v.avg_avg_rr ?? 0).toFixed(3)}</td>
                   <td className="px-2 py-2 text-[11px]">{(v.avg_total_return ?? 0).toFixed(1)}%</td>
                   <td className="px-2 py-2 text-[11px]">{(v.avg_drawdown ?? 0).toFixed(1)}%</td>
-                  <td className="px-2 py-2 text-[11px]">{(v.avg_sharpe ?? 0).toFixed(2)}</td>
+                  <td className="px-2 py-2 text-[11px]">{(v.avg_profit_factor ?? 0).toFixed(2)}</td>
                   <td className="px-2 py-2 text-[11px]">{(v.trades_per_ticker ?? 0).toFixed(1)}</td>
                   <td className="px-2 py-2 text-[11px] font-semibold">{(v.score ?? 0).toFixed(2)}</td>
                   <td className="px-2 py-2 text-right">

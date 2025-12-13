@@ -21,17 +21,17 @@ export default async function EngineVariantsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Engine Filter Variants</h1>
-            <p className="text-slate-400 mt-1">
+            <h1 className="text-3xl font-bold text-foreground">Engine Filter Variants</h1>
+            <p className="text-muted-foreground mt-1">
               Compare V7.x filter configurations across tickers, metrics, and timeframes.
             </p>
           </div>
-          <Card className="rounded-2xl shadow-md border-slate-800 bg-slate-900/80">
+          <Card className="rounded-2xl shadow-md">
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
-              <Settings2 className="h-5 w-5 text-emerald-400" />
+              <Settings2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               <div>
-                <CardTitle className="text-sm text-slate-50">Admin Tools</CardTitle>
-                <CardDescription className="text-xs text-slate-400">
+                <CardTitle className="text-sm">Admin Tools</CardTitle>
+                <CardDescription className="text-xs">
                   Internal V7.x engine tuning workspace.
                 </CardDescription>
               </div>
@@ -39,16 +39,16 @@ export default async function EngineVariantsPage() {
           </Card>
         </div>
 
-        <Card className="rounded-2xl border-slate-800 bg-slate-900/70 shadow-sm">
+        <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-50">How to use this dashboard</CardTitle>
-            <CardDescription className="text-xs text-slate-400">
-              This page visualizes data from the <code className="rounded bg-slate-800 px-1 py-0.5 text-[10px]">engine_filter_performance</code> table.
+            <CardTitle className="text-sm">How to use this dashboard</CardTitle>
+            <CardDescription className="text-xs">
+              This page visualizes data from the <code className="rounded bg-muted px-1 py-0.5 text-[10px]">engine_filter_performance</code> table.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-xs text-slate-400 space-y-1">
+          <CardContent className="text-xs text-muted-foreground space-y-1">
             <p>1. Run the V7.x engine variant benchmark in the backend:</p>
-            <p className="ml-4 font-mono text-[11px] text-emerald-300">
+            <p className="ml-4 font-mono text-[11px] text-emerald-700 dark:text-emerald-300">
               deno run --allow-env --allow-net --allow-read tools/run_engine_variant_tests.ts
             </p>
             <p>2. Ensure Supabase migrations are applied in <span className="font-mono">tradelens_ai</span>:</p>

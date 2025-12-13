@@ -8,8 +8,8 @@ export default function ContentPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Content Management</h1>
-          <p className="text-slate-400 mt-1">Manage blog posts, changelogs, and announcements</p>
+          <h1 className="text-3xl font-bold text-foreground">Content Management</h1>
+          <p className="text-muted-foreground mt-1">Manage blog posts, changelogs, and announcements</p>
         </div>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
           <PlusCircle className="h-4 w-4 mr-2" />
@@ -23,9 +23,9 @@ export default function ContentPage() {
         <KPITile title="Announcements" value="12" icon={FileText} />
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Recent Content</CardTitle>
+          <CardTitle>Recent Content</CardTitle>
           <CardDescription>Latest blog posts and announcements</CardDescription>
         </CardHeader>
         <CardContent>
@@ -37,11 +37,11 @@ export default function ContentPage() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-4 bg-slate-800 rounded-lg"
+                className="flex items-center justify-between p-4 bg-muted rounded-lg"
               >
                 <div>
-                  <h3 className="text-white font-medium">{item.title}</h3>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <h3 className="text-foreground font-medium">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {item.type} · {item.date}
                   </p>
                 </div>

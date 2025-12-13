@@ -28,7 +28,7 @@ const navigation = [
   { name: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { name: 'AI Tokens', href: '/admin/ai-tokens', icon: Cpu },
   { name: 'Data Costs', href: '/admin/data-costs', icon: Database },
-  { name: 'Engines', href: '/admin/engines', icon: Cpu },
+  { name: 'Engine Performance', href: '/admin/engines', icon: Cpu },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
   { name: 'Discord', href: '/admin/discord', icon: MessageSquare },
@@ -43,13 +43,13 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full w-64 flex-col bg-slate-900 border-r border-slate-800">
+    <div className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
-        <Shield className="h-8 w-8 text-emerald-500" />
+      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
+        <Shield className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         <div>
-          <h1 className="text-lg font-bold text-white">TradeLens AI</h1>
-          <p className="text-xs text-slate-400">Admin Portal</p>
+          <h1 className="text-lg font-bold">TradeLens AI</h1>
+          <p className="text-xs text-muted-foreground">Admin Portal</p>
         </div>
       </div>
 
@@ -64,8 +64,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                  : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
               )}
             >
               <item.icon className="h-5 w-5" />

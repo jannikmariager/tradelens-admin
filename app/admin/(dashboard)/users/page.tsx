@@ -49,8 +49,8 @@ export default async function UsersPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Users</h1>
-        <p className="text-slate-400 mt-1">Manage user accounts and subscriptions</p>
+        <h1 className="text-3xl font-bold text-foreground">Users</h1>
+        <p className="text-muted-foreground mt-1">Manage user accounts and subscriptions</p>
       </div>
 
       {/* KPIs */}
@@ -70,32 +70,32 @@ export default async function UsersPage() {
       </div>
 
       {/* Users Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">Recent Users</CardTitle>
+          <CardTitle>Recent Users</CardTitle>
           <CardDescription>Latest user signups and activity</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300">Email</TableHead>
-                <TableHead className="text-slate-300">Role</TableHead>
-                <TableHead className="text-slate-300">Created</TableHead>
-                <TableHead className="text-slate-300">Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Email</TableHead>
+                <TableHead className="text-muted-foreground">Role</TableHead>
+                <TableHead className="text-muted-foreground">Created</TableHead>
+                <TableHead className="text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={4} className="text-center text-slate-400 py-8">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No users found
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user: any) => (
-                  <TableRow key={user.id} className="border-slate-800 hover:bg-slate-800/50">
-                    <TableCell className="text-white font-medium">
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
                       {user.email || 'No email'}
                     </TableCell>
                     <TableCell>
@@ -103,25 +103,25 @@ export default async function UsersPage() {
                         variant={user.role === 'admin' ? 'default' : 'secondary'}
                         className={
                           user.role === 'admin'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300'
                             : user.role === 'pro'
-                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                            ? 'bg-purple-500/10 text-purple-700 border-purple-500/20 dark:text-purple-300'
                             : user.role === 'premium'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                            : 'bg-slate-700 text-slate-300'
+                            ? 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300'
+                            : 'bg-muted text-muted-foreground border-border'
                         }
                       >
                         {user.role || 'user'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-400">
+                    <TableCell className="text-muted-foreground">
                       {user.created_at
                         ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true })
                         : 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <Link href={`/admin/users/${user.id}`}>
-                        <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300">
+                        <Button variant="ghost" size="sm" className="text-emerald-700 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200">
                           View
                         </Button>
                       </Link>

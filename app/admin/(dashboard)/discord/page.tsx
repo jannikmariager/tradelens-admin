@@ -21,8 +21,8 @@ export default async function DiscordPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Discord Community</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Discord Community</h1>
+          <p className="text-muted-foreground mt-1">
             {isConnected ? `Connected to: ${guildInfo.name}` : 'Monitor community engagement and activity'}
           </p>
         </div>
@@ -54,25 +54,25 @@ export default async function DiscordPage() {
       </div>
 
       {!isConnected && (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Discord Integration</CardTitle>
+            <CardTitle>Discord Integration</CardTitle>
             <CardDescription>Connect Discord bot to display real-time stats</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center py-12">
-              <MessageSquare className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">Discord bot not connected</p>
-              <p className="text-sm text-slate-500 mt-2">Add DISCORD_BOT_TOKEN and DISCORD_GUILD_ID to environment variables</p>
+              <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Discord bot not connected</p>
+              <p className="text-sm text-muted-foreground mt-2">Add DISCORD_BOT_TOKEN and DISCORD_GUILD_ID to environment variables</p>
             </div>
           </CardContent>
         </Card>
       )}
 
       {isConnected && guildInfo.iconUrl && (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Server Info</CardTitle>
+            <CardTitle>Server Info</CardTitle>
             <CardDescription>Discord server details</CardDescription>
           </CardHeader>
           <CardContent>
@@ -83,8 +83,8 @@ export default async function DiscordPage() {
                 className="w-16 h-16 rounded-full"
               />
               <div>
-                <h3 className="text-lg font-semibold text-white">{guildInfo.name}</h3>
-                <p className="text-sm text-slate-400">Server ID: {guildInfo.id}</p>
+                <h3 className="text-lg font-semibold text-foreground">{guildInfo.name}</h3>
+                <p className="text-sm text-muted-foreground">Server ID: {guildInfo.id}</p>
               </div>
             </div>
           </CardContent>

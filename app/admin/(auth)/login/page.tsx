@@ -37,14 +37,14 @@ function LoginForm() {
   const errorMessage = errorParam ? errorMessages[errorParam] || decodeURIComponent(errorParam) : null
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <Card className="w-full max-w-md border-slate-700 bg-slate-800/50 backdrop-blur">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-8 w-8 text-emerald-500" />
-            <CardTitle className="text-2xl font-bold text-white">Admin Portal</CardTitle>
+            <Shield className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+            <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
           </div>
-          <CardDescription className="text-slate-400">
+          <CardDescription>
             Sign in to access the TradeLens AI admin dashboard
           </CardDescription>
         </CardHeader>
@@ -58,7 +58,7 @@ function LoginForm() {
 
           <form action={loginAction} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-slate-300">
+              <label htmlFor="email" className="text-sm font-medium">
                 Email
               </label>
               <Input
@@ -68,12 +68,11 @@ function LoginForm() {
                 placeholder="admin@tradelens.ai"
                 defaultValue="jannikmariager@hotmail.com"
                 required
-                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-slate-300">
+              <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
               <Input
@@ -81,7 +80,6 @@ function LoginForm() {
                 name="password"
                 type="password"
                 required
-                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
 
@@ -96,8 +94,8 @@ function LoginForm() {
 export default function AdminLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-foreground">Loading...</div>
       </div>
     }>
       <LoginForm />

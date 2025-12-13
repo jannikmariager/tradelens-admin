@@ -16,7 +16,7 @@ export interface VariantAggregateRowClient {
   avg_avg_rr: number | null
   avg_total_return: number | null
   avg_drawdown: number | null
-  avg_sharpe: number | null
+  avg_profit_factor: number | null
   signals_per_ticker: number | null
   trades_per_ticker: number | null
   score?: number
@@ -36,7 +36,7 @@ export interface VariantRunRowClient {
   expectancy: number | null
   total_return_pct: number | null
   max_drawdown_pct: number | null
-  sharpe: number | null
+  profit_factor: number | null
   test_period_days: number | null
   notes?: string | null
 }
@@ -126,7 +126,7 @@ export function VariantDashboardClient({ aggregates, ranked, runs }: Props) {
         </div>
       </div>
 
-      {/* Top 3 score cards */}
+      {/* Top 3 variant score cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {topThree.map((variant, idx) => (
           <VariantScoreCard
