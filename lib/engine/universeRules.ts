@@ -44,6 +44,8 @@ export type TickerStats = {
   expectancy: number
   max_drawdown_pct: number
   profit_factor: number | null
+  // Average model confidence over the last 14 calendar days across all signals for this ticker
+  avg_confidence_14d?: number | null
 }
 
 export function isPromotionCandidate(stats: TickerStats, horizon: Horizon = 'day'): boolean {

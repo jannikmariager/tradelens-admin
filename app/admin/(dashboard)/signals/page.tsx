@@ -123,6 +123,7 @@ async function getSignalStats({ tradingStyleFilter, discordFilter, sortKey, sort
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
   // Get signals generated today
   let todayQuery = supabase
@@ -177,8 +178,17 @@ async function getSignalStats({ tradingStyleFilter, discordFilter, sortKey, sort
     .from('signal_run_log')
     .select('*')
     .gte('run_started_at', fourHoursAgo)
+    .neq('engine_type', 'VISIBILITY')
     .order('run_started_at', { ascending: false })
     .limit(30)
+
+  const { data: visibilityRuns } = await supabase
+    .from('signal_run_log')
+    .select('*')
+    .eq('engine_type', 'VISIBILITY')
+    .gte('run_started_at', twoHoursAgo)
+    .order('run_started_at', { ascending: false })
+    .limit(20)
 
   return {
     signalsToday: signalsToday || 0,
@@ -190,6 +200,7 @@ async function getSignalStats({ tradingStyleFilter, discordFilter, sortKey, sort
     invest,
     recentSignals: recentSignals || [],
     runLogs: runLogs || [],
+    visibilityRuns: visibilityRuns || [],
   }
 }
 
@@ -282,9 +293,19 @@ export default async function SignalsPage({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Trading Signals</h1>
-        <p className="text-muted-foreground mt-1">AI-generated trading signals and performance</p>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Trading Signals</h1>
+          <p className="text-muted-foreground mt-1">AI-generated trading signals and performance</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/signals/live-decisions"
+            className="text-sm text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+          >
+            View live trading decisions →
+          </Link>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -420,6 +441,77 @@ export default async function SignalsPage({
                       >
                         View
                       </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Visibility Evaluator Runs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Signals Visibility Evaluator (last 2h)</CardTitle>
+          <CardDescription>
+            Last runs of the visibility layer that upgrades/suppresses ai_signals and gates Discord/push.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-muted-foreground">Started (UTC)</TableHead>
+                <TableHead className="text-muted-foreground text-right">Evaluated</TableHead>
+                <TableHead className="text-muted-foreground text-right">Upgraded</TableHead>
+                <TableHead className="text-muted-foreground text-right">Suppressed</TableHead>
+                <TableHead className="text-muted-foreground text-right">Published Today</TableHead>
+                <TableHead className="text-muted-foreground text-right">Duration</TableHead>
+                <TableHead className="text-muted-foreground text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(stats.visibilityRuns as any[]).length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                    No visibility evaluator runs recorded in the last 2 hours
+                  </TableCell>
+                </TableRow>
+              ) : (
+                (stats.visibilityRuns as any[]).map((run: any) => (
+                  <TableRow key={run.id}>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {new Date(run.run_started_at).toISOString().replace('T', ' ').replace('Z', ' UTC')}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {run.total_symbols}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {run.generated_count}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {run.deduped_count}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {run.no_trade_count}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground text-xs">
+                      {(run.duration_ms / 1000).toFixed(1)}s
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge
+                        variant="outline"
+                        className={
+                          run.status === 'ok'
+                            ? 'border-emerald-500/40 text-emerald-700 bg-emerald-500/10 dark:text-emerald-300'
+                            : run.status === 'warn'
+                            ? 'border-amber-500/40 text-amber-700 bg-amber-500/10 dark:text-amber-300'
+                            : 'border-red-500/40 text-red-700 bg-red-500/10 dark:text-red-300'
+                        }
+                      >
+                        {(run.status || 'unknown').toUpperCase()}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))

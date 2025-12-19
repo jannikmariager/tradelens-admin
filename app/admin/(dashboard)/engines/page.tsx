@@ -5,6 +5,8 @@ import { fetchAllVariantResults, fetchVariantAggregate } from '@/lib/server/engi
 import { rankVariants, type RankedVariantRow, type VariantAggregateRow } from '@/lib/server/variantRanking';
 import { VariantDashboardClient } from '@/components/admin/engines/VariantDashboardClient';
 import { UniverseTab } from './UniverseTab';
+import { EngineSettingsClient } from './EngineSettingsClient';
+import { getStrategyFlags } from './engineFlagsActions';
 
 interface PageProps {
   searchParams?: {
@@ -13,9 +15,10 @@ interface PageProps {
 }
 
 export default async function EnginesDashboardPage({ searchParams }: PageProps) {
-  const [aggregateRaw, allRuns] = await Promise.all([
+  const [aggregateRaw, allRuns, flags] = await Promise.all([
     fetchVariantAggregate(),
     fetchAllVariantResults(),
+    getStrategyFlags(),
   ]);
 
   const engineVersion = searchParams?.engineVersion ?? 'v7.4';
@@ -37,9 +40,8 @@ export default async function EnginesDashboardPage({ searchParams }: PageProps) 
           <TabsList>
             <TabsTrigger value="versions">Engine versions</TabsTrigger>
             <TabsTrigger value="variants">Filter variants (V7.x)</TabsTrigger>
-            <TabsTrigger value="day">⚡ Daytrade</TabsTrigger>
-            <TabsTrigger value="swing">📈 Swing</TabsTrigger>
-            <TabsTrigger value="invest">🎯 Investor</TabsTrigger>
+            <TabsTrigger value="universe">Ticker universe</TabsTrigger>
+            <TabsTrigger value="settings">Engine settings</TabsTrigger>
           </TabsList>
           <TabsContent value="versions" className="space-y-4">
             <EngineEvolutionDashboard />
@@ -47,14 +49,12 @@ export default async function EnginesDashboardPage({ searchParams }: PageProps) 
           <TabsContent value="variants" className="space-y-4">
             <VariantDashboardClient aggregates={aggregate} ranked={ranked} runs={allRuns} />
           </TabsContent>
-          <TabsContent value="day" className="space-y-4">
-            <UniverseTab engineVersion={engineVersion} horizon="day" />
-          </TabsContent>
-          <TabsContent value="swing" className="space-y-4">
+          <TabsContent value="universe" className="space-y-4">
+            {/* Single live trading universe. Other styles are research-only and hidden here. */}
             <UniverseTab engineVersion={engineVersion} horizon="swing" />
           </TabsContent>
-          <TabsContent value="invest" className="space-y-4">
-            <UniverseTab engineVersion={engineVersion} horizon="invest" />
+          <TabsContent value="settings" className="space-y-4">
+            <EngineSettingsClient flags={flags} />
           </TabsContent>
         </Tabs>
       </div>
