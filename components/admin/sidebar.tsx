@@ -31,6 +31,7 @@ const navigation = [
   { name: 'Engine Performance', href: '/admin/engines', icon: Cpu },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
+  { name: 'Early Access', href: '/admin/early-access', icon: Users },
   { name: 'Discord', href: '/admin/discord', icon: MessageSquare },
   { name: 'Crashes', href: '/admin/crashes', icon: Bug },
   { name: 'Errors', href: '/admin/errors', icon: AlertTriangle },
