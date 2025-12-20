@@ -19,6 +19,7 @@ import {
   Settings,
   BarChart3,
   Shield,
+  Mail,
 } from 'lucide-react'
 
 const navigation = [
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
   { name: 'Early Access', href: '/admin/early-access', icon: Users },
+  { name: 'Contact Requests', href: '/admin/contact-requests', icon: Mail },
   { name: 'Discord', href: '/admin/discord', icon: MessageSquare },
   { name: 'Crashes', href: '/admin/crashes', icon: Bug },
   { name: 'Errors', href: '/admin/errors', icon: AlertTriangle },
