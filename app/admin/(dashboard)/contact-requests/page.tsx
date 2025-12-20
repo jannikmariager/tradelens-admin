@@ -45,7 +45,11 @@ export default async function ContactRequestsPage() {
             {requests.map((row) => (
               <tr key={row.id} className="border-t border-border/70 align-top">
                 <td className="px-3 py-3 font-medium">{row.email}</td>
-                <td className="px-3 py-3 whitespace-pre-wrap text-sm text-foreground/90">{row.message}</td>
+                <td className="px-3 py-3 whitespace-pre-wrap text-sm text-foreground/90">
+                  {row.message && row.message !== "No message provided" ? row.message : (
+                    <span className="text-muted-foreground">No additional message</span>
+                  )}
+                </td>
                 <td className="px-3 py-3 text-muted-foreground">{row.source}</td>
                 <td className="px-3 py-3 text-muted-foreground">{new Date(row.created_at).toLocaleString()}</td>
               </tr>
