@@ -139,7 +139,7 @@ export async function GET() {
       let currentEquity = 100000
       if (portfolioData.length > 0) {
         // Get the most recent snapshot
-        const mostRecent = portfolioData[portfolioData.length - 1]
+        const mostRecent = portfolioData[portfolioData.length - 1] as any
         currentEquity = mostRecent?.equity_dollars || mostRecent?.equity || 100000
       }
 
