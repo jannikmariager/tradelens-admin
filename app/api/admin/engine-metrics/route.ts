@@ -1,6 +1,45 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+const STARTING_EQUITY = 100000
+
+async function fetchJournalTotals(supabase: ReturnType<typeof createClient>) {
+  const { data: closedTrades, error: closedTradesError } = await supabase
+    .from('live_trades')
+    .select('realized_pnl_dollars')
+    .eq('strategy', 'SWING')
+    .not('exit_timestamp', 'is', null)
+
+  if (closedTradesError) throw closedTradesError
+
+  const { data: openPositions, error: openPositionsError } = await supabase
+    .from('live_positions')
+    .select('unrealized_pnl_dollars')
+    .eq('strategy', 'SWING')
+
+  if (openPositionsError) throw openPositionsError
+
+  const sinceInceptionRealized = (closedTrades || []).reduce(
+    (sum, trade) => sum + Number(trade.realized_pnl_dollars ?? 0),
+    0,
+  )
+  const currentUnrealized = (openPositions || []).reduce(
+    (sum, pos) => sum + Number(pos.unrealized_pnl_dollars ?? 0),
+    0,
+  )
+
+  const currentEquity = STARTING_EQUITY + sinceInceptionRealized + currentUnrealized
+  const netReturn = ((currentEquity - STARTING_EQUITY) / STARTING_EQUITY) * 100
+
+  return {
+    starting_equity: STARTING_EQUITY,
+    current_equity: currentEquity,
+    since_inception_realized_pnl: sinceInceptionRealized,
+    current_unrealized_pnl: currentUnrealized,
+    net_return_pct: netReturn,
+  }
+}
+
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -38,15 +77,27 @@ export async function GET() {
         // PRIMARY: get data from live_* tables
         const { data: trades, error: tradesError } = await supabase
           .from('live_trades')
-          .select('realized_pnl_dollars, realized_pnl_r, exit_timestamp, entry_timestamp')
+          .select(
+            'ticker, side, entry_timestamp, entry_price, exit_timestamp, exit_price, realized_pnl_dollars, realized_pnl_r',
+          )
           .eq('engine_version', version.engine_version)
+          .order('exit_timestamp', { ascending: false })
 
         if (tradesError) {
           console.error(`Error fetching live_trades for ${version.engine_version}:`, tradesError)
           continue
         }
 
-        tradeData = trades || []
+        tradeData = (trades || []).map((trade) => ({
+          ticker: trade.ticker,
+          side: trade.side,
+          entry_timestamp: trade.entry_timestamp,
+          entry_price: trade.entry_price,
+          exit_timestamp: trade.exit_timestamp,
+          exit_price: trade.exit_price,
+          realized_pnl_dollars: trade.realized_pnl_dollars,
+          realized_pnl_r: trade.realized_pnl_r,
+        }))
 
         // Get historical portfolio snapshots for equity curve
         const { data: portfolio, error: portfolioError } = await supabase
@@ -67,10 +118,11 @@ export async function GET() {
         // SHADOW: get data from engine_* tables
         const { data: trades, error: tradesError } = await supabase
           .from('engine_trades')
-          .select('realized_pnl, realized_r, closed_at, opened_at')
+          .select('ticker, side, entry_price, exit_price, realized_pnl, realized_r, closed_at, opened_at')
           .eq('engine_key', version.engine_key)
           .eq('engine_version', version.engine_version)
           .eq('run_mode', version.run_mode)
+          .order('closed_at', { ascending: false })
 
         if (tradesError) {
           console.error(`Error fetching engine_trades for ${version.engine_version}:`, tradesError)
@@ -78,6 +130,10 @@ export async function GET() {
         }
 
         tradeData = (trades || []).map((t: any) => ({
+          ticker: t.ticker,
+          side: t.side,
+          entry_price: t.entry_price,
+          exit_price: t.exit_price,
           realized_pnl_dollars: t.realized_pnl,
           realized_pnl_r: t.realized_r,
           exit_timestamp: t.closed_at,
@@ -145,6 +201,14 @@ export async function GET() {
 
       const netReturn = ((currentEquity - 100000) / 100000) * 100
 
+      const recentTrades = [...tradeData]
+        .sort((a: any, b: any) => {
+          const aTime = a.exit_timestamp ? new Date(a.exit_timestamp).getTime() : 0
+          const bTime = b.exit_timestamp ? new Date(b.exit_timestamp).getTime() : 0
+          return bTime - aTime
+        })
+        .slice(0, 10)
+
       metrics.push({
         engine_version: version.engine_version,
         run_mode: version.run_mode,
@@ -165,9 +229,12 @@ export async function GET() {
           timestamp: p.timestamp || p.updated_at,
           equity: p.equity_dollars || p.equity || 0,
         })),
+        recent_trades: recentTrades,
       })
     }
+    const journalTotals = await fetchJournalTotals(supabase)
 
+    return NextResponse.json({ metrics, journal_totals: journalTotals }, { status: 200 })
     return NextResponse.json({ metrics }, { status: 200 })
   } catch (error) {
     console.error('Error in engine-metrics API:', error)

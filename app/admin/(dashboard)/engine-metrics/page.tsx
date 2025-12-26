@@ -5,6 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
+interface EngineTrade {
+  ticker: string | null
+  side: 'LONG' | 'SHORT' | null
+  entry_price: number | null
+  exit_price: number | null
+  entry_timestamp: string | null
+  exit_timestamp: string | null
+  realized_pnl_dollars: number | null
+  realized_pnl_r: number | null
+}
+
 interface EngineMetric {
   engine_version: string
   run_mode: 'PRIMARY' | 'SHADOW'
@@ -22,10 +33,20 @@ interface EngineMetric {
   current_equity: number
   net_return: number
   equity_curve: Array<{ timestamp: string; equity: number }>
+  recent_trades?: EngineTrade[]
+}
+
+interface JournalTotals {
+  starting_equity: number
+  current_equity: number
+  since_inception_realized_pnl: number
+  current_unrealized_pnl: number
+  net_return_pct: number
 }
 
 export default function EngineMetricsPage() {
   const [metrics, setMetrics] = useState<EngineMetric[]>([])
+  const [journalTotals, setJournalTotals] = useState<JournalTotals | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,6 +59,7 @@ export default function EngineMetricsPage() {
         }
         const data = await response.json()
         setMetrics(data.metrics || [])
+        setJournalTotals(data.journal_totals || null)
       } catch (err) {
         setError((err as Error).message)
       } finally {
@@ -72,6 +94,51 @@ export default function EngineMetricsPage() {
 
   const primaryEngines = metrics.filter((m) => m.run_mode === 'PRIMARY')
   const shadowEngines = metrics.filter((m) => m.run_mode === 'SHADOW')
+  const activePrimary = primaryEngines.find((engine) => engine.is_enabled) ?? primaryEngines[0] ?? null
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return '—'
+    return new Date(value).toLocaleString()
+  }
+
+  const renderTradesTable = (engine: EngineMetric) => {
+    if (!engine.recent_trades || engine.recent_trades.length === 0) {
+      return <p className="text-muted-foreground">No closed trades yet.</p>
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Ticker</TableHead>
+            <TableHead>Side</TableHead>
+            <TableHead>Entry → Exit</TableHead>
+            <TableHead>PnL ($)</TableHead>
+            <TableHead>PnL (R)</TableHead>
+            <TableHead>Closed</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {engine.recent_trades.map((trade, idx) => (
+            <TableRow key={`${engine.engine_version}-trade-${idx}`}>
+              <TableCell className="font-medium">{trade.ticker || '—'}</TableCell>
+              <TableCell>{trade.side || '—'}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                ${trade.entry_price?.toFixed(2) ?? '—'} → ${trade.exit_price?.toFixed(2) ?? '—'}
+              </TableCell>
+              <TableCell className={Number(trade.realized_pnl_dollars) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                ${Number(trade.realized_pnl_dollars ?? 0).toFixed(2)}
+              </TableCell>
+              <TableCell className={Number(trade.realized_pnl_r) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {Number(trade.realized_pnl_r ?? 0).toFixed(2)}R
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">{formatDateTime(trade.exit_timestamp)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -204,6 +271,61 @@ export default function EngineMetricsPage() {
         </CardContent>
       </Card>
 
+      {journalTotals && activePrimary && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Live Journal vs Admin (SWING)</CardTitle>
+            <CardDescription>
+              Journal stats include every SWING trade (any engine version) plus current unrealized PnL. Admin stats on
+              this page are scoped to the active engine_version ({activePrimary.engine_version}). Any delta therefore
+              represents historical trades or open positions outside the current engine.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Metric</TableHead>
+                  <TableHead>Admin (Primary Engine)</TableHead>
+                  <TableHead>Journal (Strategy)</TableHead>
+                  <TableHead>Delta</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Current Equity</TableCell>
+                  <TableCell>
+                    ${activePrimary.current_equity.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell>
+                    ${journalTotals.current_equity.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell>
+                    ${(activePrimary.current_equity - journalTotals.current_equity).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Net Return %</TableCell>
+                  <TableCell>{activePrimary.net_return.toFixed(2)}%</TableCell>
+                  <TableCell>{journalTotals.net_return_pct.toFixed(2)}%</TableCell>
+                  <TableCell>
+                    {(activePrimary.net_return - journalTotals.net_return_pct).toFixed(2)}%
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Total Realized PnL</TableCell>
+                  <TableCell>${activePrimary.total_pnl.toFixed(2)}</TableCell>
+                  <TableCell>${journalTotals.since_inception_realized_pnl.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {(activePrimary.total_pnl - journalTotals.since_inception_realized_pnl).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {metrics.map((engine) => (
@@ -227,6 +349,23 @@ export default function EngineMetricsPage() {
                 </p>
               </div>
             </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Recent Trades */}
+      <div className="space-y-4">
+        {[...primaryEngines, ...shadowEngines].map((engine) => (
+          <Card key={`${engine.engine_version}-${engine.run_mode}-trades`}>
+            <CardHeader>
+              <CardTitle>
+                Recent Trades — {engine.engine_version} ({engine.run_mode})
+              </CardTitle>
+              <CardDescription>
+                Pulled directly from {engine.run_mode === 'PRIMARY' ? 'live_trades' : 'engine_trades'} (max 10)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>{renderTradesTable(engine)}</CardContent>
           </Card>
         ))}
       </div>
