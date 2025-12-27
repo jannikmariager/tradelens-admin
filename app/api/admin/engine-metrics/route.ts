@@ -230,6 +230,7 @@ export async function GET() {
           equity: p.equity_dollars || p.equity || 0,
         })),
         recent_trades: recentTrades,
+        display_label: version.notes ?? version.engine_version,
       })
     }
     const journalTotals = await fetchJournalTotals(supabase)

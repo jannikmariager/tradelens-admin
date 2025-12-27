@@ -34,6 +34,7 @@ interface EngineMetric {
   net_return: number
   equity_curve: Array<{ timestamp: string; equity: number }>
   recent_trades?: EngineTrade[]
+  display_label?: string
 }
 
 interface JournalTotals {
@@ -100,6 +101,7 @@ export default function EngineMetricsPage() {
     if (!value) return '—'
     return new Date(value).toLocaleString()
   }
+  const getEngineLabel = (engine: EngineMetric) => engine.display_label || engine.engine_version
 
   const renderTradesTable = (engine: EngineMetric) => {
     if (!engine.recent_trades || engine.recent_trades.length === 0) {
@@ -176,7 +178,8 @@ export default function EngineMetricsPage() {
               <TableBody>
                 {primaryEngines.map((engine) => (
                   <TableRow key={engine.engine_version}>
-                    <TableCell className="font-medium">{engine.engine_version}</TableCell>
+                  <TableCell className=\"font-medium\">{getEngineLabel(engine)}</TableCell>
+
                     <TableCell>
                       {engine.is_enabled ? (
                         <Badge variant="default" className="bg-green-600">
@@ -277,7 +280,7 @@ export default function EngineMetricsPage() {
             <CardTitle>Live Journal vs Admin (SWING)</CardTitle>
             <CardDescription>
               Journal stats include every SWING trade (any engine version) plus current unrealized PnL. Admin stats on
-              this page are scoped to the active engine_version ({activePrimary.engine_version}). Any delta therefore
+              this page are scoped to the active engine_version ({getEngineLabel(activePrimary)}). Any delta therefore
               represents historical trades or open positions outside the current engine.
             </CardDescription>
           </CardHeader>
@@ -330,8 +333,8 @@ export default function EngineMetricsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {metrics.map((engine) => (
           <Card key={engine.engine_version}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{engine.engine_version}</CardTitle>
+            <CardHeader className=\"pb-2\">
+              <CardTitle className=\"text-sm font-medium\">{getEngineLabel(engine)}</CardTitle>
               <CardDescription>
                 <Badge variant={engine.run_mode === 'PRIMARY' ? 'default' : 'outline'}>
                   {engine.run_mode}
@@ -359,7 +362,7 @@ export default function EngineMetricsPage() {
           <Card key={`${engine.engine_version}-${engine.run_mode}-trades`}>
             <CardHeader>
               <CardTitle>
-                Recent Trades — {engine.engine_version} ({engine.run_mode})
+                Recent Trades — {getEngineLabel(engine)} ({engine.run_mode})
               </CardTitle>
               <CardDescription>
                 Pulled directly from {engine.run_mode === 'PRIMARY' ? 'live_trades' : 'engine_trades'} (max 10)
