@@ -178,7 +178,7 @@ export default function EngineMetricsPage() {
               <TableBody>
                 {primaryEngines.map((engine) => (
                   <TableRow key={engine.engine_version}>
-                  <TableCell className=\"font-medium\">{getEngineLabel(engine)}</TableCell>
+                    <TableCell className="font-medium">{getEngineLabel(engine)}</TableCell>
 
                     <TableCell>
                       {engine.is_enabled ? (
