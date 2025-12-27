@@ -333,8 +333,8 @@ export default function EngineMetricsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {metrics.map((engine) => (
           <Card key={engine.engine_version}>
-            <CardHeader className=\"pb-2\">
-              <CardTitle className=\"text-sm font-medium\">{getEngineLabel(engine)}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">{getEngineLabel(engine)}</CardTitle>
               <CardDescription>
                 <Badge variant={engine.run_mode === 'PRIMARY' ? 'default' : 'outline'}>
                   {engine.run_mode}
