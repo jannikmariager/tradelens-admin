@@ -30,6 +30,7 @@ const navigation = [
   { name: 'AI Tokens', href: '/admin/ai-tokens', icon: Cpu },
   { name: 'Data Costs', href: '/admin/data-costs', icon: Database },
   { name: 'Engine Metrics', href: '/admin/engine-metrics', icon: Cpu },
+  { name: '  └ Shadow Scalp', href: '/admin/engine-metrics/shadow-scalp', icon: Cpu },
   { name: 'Engine Performance', href: '/admin/engines', icon: TrendingUp },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
