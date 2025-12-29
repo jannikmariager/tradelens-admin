@@ -169,7 +169,7 @@ export default function ScalpV1MicroedgePage() {
       </div>
 
       {/* Engine Parameters */}
-      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+      {engine.engine_params && (engine.engine_params.min_confidence_pct || engine.engine_params.target_r_default) && (
         <Card>
           <CardHeader>
             <CardTitle>Configuration Parameters</CardTitle>
