@@ -34,13 +34,15 @@ interface EngineMetric {
   recent_trades?: EngineTrade[]
   display_label?: string
   engine_params?: {
-    min_stop_distance_r?: number
-    atr_stop_distance_multiple?: number
-    max_risk_pct_per_trade?: number
-    max_total_open_risk_pct?: number
-    max_positions_per_ticker?: number
-    max_daily_loss_pct?: number
-    hard_max_positions?: number
+    min_confidence_pct?: number
+    target_r_low?: number
+    target_r_default?: number
+    target_r_high?: number
+    stop_r?: number
+    risk_pct_per_trade?: number
+    max_concurrent_positions?: number
+    time_limit_minutes?: number
+    overnight_force_close_utc_time?: string
   }
 }
 
@@ -171,40 +173,69 @@ export default function ScalpV1MicroedgePage() {
         <Card>
           <CardHeader>
             <CardTitle>Configuration Parameters</CardTitle>
-            <CardDescription>Sizing and risk management settings</CardDescription>
+            <CardDescription>Entry filtering, exit targets, and position sizing</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-3">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Entry Filtering</h3>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Min Stop Distance</span>
-                  <span className="font-medium">{engine.engine_params.min_stop_distance_r}R</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">ATR Stop Multiple</span>
-                  <span className="font-medium">{engine.engine_params.atr_stop_distance_multiple}x</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Max Risk per Trade</span>
-                  <span className="font-medium">{engine.engine_params.max_risk_pct_per_trade}%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Max Total Open Risk</span>
-                  <span className="font-medium">{engine.engine_params.max_total_open_risk_pct}%</span>
+                  <span className="text-muted-foreground">Min Confidence</span>
+                  <span className="font-medium">{engine.engine_params.min_confidence_pct}%</span>
                 </div>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Max Positions per Ticker</span>
-                  <span className="font-medium">{engine.engine_params.max_positions_per_ticker}</span>
+              
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Exit Targets (R)</h3>
+                <div className="grid gap-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Low Target</span>
+                    <span className="font-medium">{engine.engine_params.target_r_low}R</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Default Target</span>
+                    <span className="font-medium text-emerald-600 font-semibold">{engine.engine_params.target_r_default}R</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">High Target</span>
+                    <span className="font-medium">{engine.engine_params.target_r_high}R</span>
+                  </div>
                 </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Stop Loss</h3>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Hard Max Positions</span>
-                  <span className="font-medium">{engine.engine_params.hard_max_positions}</span>
+                  <span className="text-muted-foreground">Hard Stop</span>
+                  <span className="font-medium text-red-600">−{engine.engine_params.stop_r}R</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Max Daily Loss</span>
-                  <span className="font-medium text-red-600">{engine.engine_params.max_daily_loss_pct}%</span>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Position Sizing</h3>
+                <div className="grid gap-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Risk per Trade</span>
+                    <span className="font-medium">{engine.engine_params.risk_pct_per_trade}% of equity</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Max Concurrent Positions</span>
+                    <span className="font-medium">{engine.engine_params.max_concurrent_positions}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3">Time Limits</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Trade Duration</span>
+                    <span className="font-medium">{engine.engine_params.time_limit_minutes} minutes max</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Overnight Close</span>
+                    <span className="font-medium">{engine.engine_params.overnight_force_close_utc_time} UTC</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -215,29 +215,34 @@ export async function GET() {
         const { data: params, error: paramsError } = await supabase
           .from('scalp_engine_config')
           .select('*')
+          .eq('engine_key', 'SCALP')
           .eq('engine_version', version.engine_version)
           .single()
 
         if (!paramsError && params) {
           engineParams = {
-            min_stop_distance_r: params.min_stop_distance_r,
-            atr_stop_distance_multiple: params.atr_stop_distance_multiple,
-            max_risk_pct_per_trade: params.max_risk_pct_per_trade,
-            max_total_open_risk_pct: params.max_total_open_risk_pct,
-            max_positions_per_ticker: params.max_positions_per_ticker,
-            max_daily_loss_pct: params.max_daily_loss_pct,
-            hard_max_positions: params.hard_max_positions,
+            min_confidence_pct: params.min_confidence_pct,
+            target_r_low: params.target_r_low,
+            target_r_default: params.target_r_default,
+            target_r_high: params.target_r_high,
+            stop_r: params.stop_r,
+            risk_pct_per_trade: params.risk_pct_per_trade,
+            max_concurrent_positions: params.max_concurrent_positions,
+            time_limit_minutes: params.time_limit_minutes,
+            overnight_force_close_utc_time: params.overnight_force_close_utc_time,
           }
         } else {
-          // Provide default parameters if table not found
+          // Provide default parameters matching SCALP audit
           engineParams = {
-            min_stop_distance_r: 0.5,
-            atr_stop_distance_multiple: 1.5,
-            max_risk_pct_per_trade: 1.0,
-            max_total_open_risk_pct: 3.0,
-            max_positions_per_ticker: 2,
-            max_daily_loss_pct: 2.0,
-            hard_max_positions: 10,
+            min_confidence_pct: 60,
+            target_r_low: 0.15,
+            target_r_default: 0.20,
+            target_r_high: 0.30,
+            stop_r: 0.12,
+            risk_pct_per_trade: 0.15,
+            max_concurrent_positions: 4,
+            time_limit_minutes: 30,
+            overnight_force_close_utc_time: '19:55:00',
           }
         }
       } else if (version.engine_version === 'SWING_V2_ROBUST' || version.engine_version === 'SWING_V1_12_15DEC') {
