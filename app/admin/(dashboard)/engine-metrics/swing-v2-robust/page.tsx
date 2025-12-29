@@ -18,20 +18,22 @@ interface EngineTrade {
 }
 
 interface EngineMetric {
-  engine_version: string;
-  run_mode: 'PRIMARY' | 'SHADOW';
-  is_enabled: boolean;
-  total_trades: number;
-  winners: number;
-  losers: number;
-  win_rate: number;
-  total_pnl: number;
-  avg_r: number;
-  max_drawdown: number;
-  current_equity: number;
-  net_return: number;
-  recent_trades?: EngineTrade[];
-  display_label?: string;
+  engine_version: string
+  engine_key: string
+  run_mode: 'PRIMARY' | 'SHADOW'
+  is_enabled: boolean
+  total_trades: number
+  winners: number
+  losers: number
+  win_rate: number
+  total_pnl: number
+  avg_r: number
+  max_drawdown: number
+  current_equity: number
+  net_return: number
+  recent_trades?: EngineTrade[]
+  display_label?: string
+  engine_params?: any
 }
 
 export default function SwingV2RobustPage() {
