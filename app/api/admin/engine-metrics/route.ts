@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 const STARTING_EQUITY = 100000
 
-async function fetchJournalTotals(supabase: ReturnType<typeof createClient>) {
+async function fetchJournalTotals(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: closedTrades, error: closedTradesError } = await supabase
     .from('live_trades')
     .select('realized_pnl_dollars')

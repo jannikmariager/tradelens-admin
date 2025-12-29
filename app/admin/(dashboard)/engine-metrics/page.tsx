@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -266,36 +267,42 @@ export default function EngineMetricsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shadowEngines.map((engine) => (
-                  <TableRow key={engine.engine_version}>
-                    <TableCell className="font-medium">{engine.engine_version}</TableCell>
-                    <TableCell>
-                      {engine.is_enabled ? (
-                        <Badge variant="outline" className="border-emerald-600 text-emerald-600">
-                          Running
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Stopped</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {engine.total_trades} ({engine.winners}W / {engine.losers}L)
-                    </TableCell>
-                    <TableCell>{engine.win_rate.toFixed(1)}%</TableCell>
-                    <TableCell className={engine.avg_r >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {engine.avg_r.toFixed(2)}R
-                    </TableCell>
-                    <TableCell className={engine.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      ${engine.total_pnl.toFixed(2)}
-                    </TableCell>
-                    <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {engine.net_return.toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-red-600">-{engine.max_drawdown.toFixed(2)}%</TableCell>
-                    <TableCell>${engine.current_equity.toLocaleString()}</TableCell>
-                  </TableRow>
+                {shadowEngines.map((engine) => {
+                  const engineSlug = engine.engine_version.toLowerCase().replace(/_/g, '-')
+                  return (
+                    <TableRow key={engine.engine_version}>
+                      <TableCell className="font-medium">
+                        <Link href={`/admin/engine-metrics/${engineSlug}`} className="hover:underline text-blue-600">
+                          {engine.engine_version}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {engine.is_enabled ? (
+                          <Badge variant="outline" className="border-emerald-600 text-emerald-600">
+                            Running
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Stopped</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {engine.total_trades} ({engine.winners}W / {engine.losers}L)
+                      </TableCell>
+                      <TableCell>{engine.win_rate.toFixed(1)}%</TableCell>
+                      <TableCell className={engine.avg_r >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {engine.avg_r.toFixed(2)}R
+                      </TableCell>
+                      <TableCell className={engine.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        ${engine.total_pnl.toFixed(2)}
+                      </TableCell>
+                      <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {engine.net_return.toFixed(2)}%
+                      </TableCell>
+                      <TableCell className="text-red-600">-{engine.max_drawdown.toFixed(2)}%</TableCell>
+                      <TableCell>${engine.current_equity.toLocaleString()}</TableCell>
+                    </TableRow>
                   )
-                })
+                })}
               </TableBody>
             </Table>
           )}
