@@ -176,65 +176,65 @@ export default function ScalpV1MicroedgePage() {
             <CardDescription>Entry filtering, exit targets, and position sizing</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Entry Filtering</h3>
+            <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+              {/* Entry Filtering */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Entry</h3>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Min Confidence</span>
+                  <span className="text-muted-foreground">Min Conf</span>
                   <span className="font-medium">{engine.engine_params.min_confidence_pct}%</span>
                 </div>
               </div>
               
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Exit Targets (R)</h3>
-                <div className="grid gap-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Low Target</span>
+              {/* Exit Targets */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Targets (R)</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Low</span>
                     <span className="font-medium">{engine.engine_params.target_r_low}R</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Default Target</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Default</span>
                     <span className="font-medium text-emerald-600 font-semibold">{engine.engine_params.target_r_default}R</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">High Target</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">High</span>
                     <span className="font-medium">{engine.engine_params.target_r_high}R</span>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Stop Loss</h3>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Hard Stop</span>
-                  <span className="font-medium text-red-600">−{engine.engine_params.stop_r}R</span>
+              {/* Stop Loss */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Risk</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Hard Stop</span>
+                    <span className="font-medium text-red-600">−{engine.engine_params.stop_r}R</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per Trade</span>
+                    <span className="font-medium">{engine.engine_params.risk_pct_per_trade}%</span>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Position Sizing</h3>
-                <div className="grid gap-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Risk per Trade</span>
-                    <span className="font-medium">{engine.engine_params.risk_pct_per_trade}% of equity</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Max Concurrent Positions</span>
+              {/* Position Sizing & Time */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Limits</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Max Open</span>
                     <span className="font-medium">{engine.engine_params.max_concurrent_positions}</span>
                   </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold mb-3">Time Limits</h3>
-                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Trade Duration</span>
-                    <span className="font-medium">{engine.engine_params.time_limit_minutes} minutes max</span>
+                    <span className="text-muted-foreground">Duration</span>
+                    <span className="font-medium">{engine.engine_params.time_limit_minutes}m</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Overnight Close</span>
-                    <span className="font-medium">{engine.engine_params.overnight_force_close_utc_time} UTC</span>
+                    <span className="text-muted-foreground">Close</span>
+                    <span className="font-medium text-xs">{engine.engine_params.overnight_force_close_utc_time}</span>
                   </div>
                 </div>
               </div>
