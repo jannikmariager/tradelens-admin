@@ -232,9 +232,13 @@ export default function ScalpV1MicroedgePage() {
                     <span className="text-muted-foreground">Duration</span>
                     <span className="font-medium">{engine.engine_params.time_limit_minutes}m</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Close</span>
-                    <span className="font-medium text-xs">{engine.engine_params.overnight_force_close_utc_time}</span>
+                  <div className="space-y-1">
+                    <div className="text-muted-foreground">Close</div>
+                    <div className="font-medium text-xs bg-amber-50 p-1 rounded">
+                      {engine.engine_params.overnight_force_close_utc_time} UTC
+                      <br/>
+                      <span className="text-xs text-muted-foreground">(3:55 PM ET)</span>
+                    </div>
                   </div>
                 </div>
               </div>
