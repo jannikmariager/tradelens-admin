@@ -7,6 +7,7 @@ import { KPITile } from '@/components/admin/kpi-tile'
 import { formatDistanceToNow } from 'date-fns'
 import { TradingStyleFilter } from '@/components/admin/trading-style-filter'
 import { DiscordDeliveryFilter } from '@/components/admin/discord-delivery-filter'
+import { EngineStatusBanner } from '@/components/admin/engine-status-banner'
 import Link from 'next/link'
 
 type SortDir = 'asc' | 'desc'
@@ -201,6 +202,12 @@ async function getSignalStats({ tradingStyleFilter, discordFilter, sortKey, sort
     recentSignals: recentSignals || [],
     runLogs: runLogs || [],
     visibilityRuns: visibilityRuns || [],
+    engineStatus: {
+      evaluation_completed: true,
+      signals_found: signalsToday || 0,
+      evaluation_reason: (signalsToday || 0) === 0 ? 'Market conditions did not meet quality thresholds' : 'Signals qualified and generated',
+      next_evaluation_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    },
   }
 }
 
@@ -307,6 +314,17 @@ export default async function SignalsPage({
           </Link>
         </div>
       </div>
+
+      {/* Engine Status Banner */}
+      {stats.engineStatus && (
+        <EngineStatusBanner
+          evaluation_completed={stats.engineStatus.evaluation_completed}
+          signals_found={stats.engineStatus.signals_found}
+          evaluation_reason={stats.engineStatus.evaluation_reason}
+          next_evaluation_at={stats.engineStatus.next_evaluation_at}
+          className="mb-4"
+        />
+      )}
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

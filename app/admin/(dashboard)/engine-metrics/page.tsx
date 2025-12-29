@@ -108,37 +108,64 @@ export default function EngineMetricsPage() {
       return <p className="text-muted-foreground">No closed trades yet.</p>
     }
 
+    // Organize trades with winners first, then losers
+    const sortedTrades = [...engine.recent_trades].sort((a, b) => {
+      const aProfit = Number(a.realized_pnl_dollars ?? 0)
+      const bProfit = Number(b.realized_pnl_dollars ?? 0)
+      return bProfit - aProfit // Descending (winners first)
+    })
+
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Ticker</TableHead>
-            <TableHead>Side</TableHead>
-            <TableHead>Entry → Exit</TableHead>
-            <TableHead>PnL ($)</TableHead>
-            <TableHead>PnL (R)</TableHead>
-            <TableHead>Closed</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {engine.recent_trades.map((trade, idx) => (
-            <TableRow key={`${engine.engine_version}-trade-${idx}`}>
-              <TableCell className="font-medium">{trade.ticker || '—'}</TableCell>
-              <TableCell>{trade.side || '—'}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                ${trade.entry_price?.toFixed(2) ?? '—'} → ${trade.exit_price?.toFixed(2) ?? '—'}
-              </TableCell>
-              <TableCell className={Number(trade.realized_pnl_dollars) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                ${Number(trade.realized_pnl_dollars ?? 0).toFixed(2)}
-              </TableCell>
-              <TableCell className={Number(trade.realized_pnl_r) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {Number(trade.realized_pnl_r ?? 0).toFixed(2)}R
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">{formatDateTime(trade.exit_timestamp)}</TableCell>
+      <div className="space-y-4">
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-16">Ticker</TableHead>
+              <TableHead className="w-12">Side</TableHead>
+              <TableHead className="text-right">Entry</TableHead>
+              <TableHead className="text-right">Exit</TableHead>
+              <TableHead className="text-right">PnL $</TableHead>
+              <TableHead className="text-right">R</TableHead>
+              <TableHead className="text-xs">Closed</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sortedTrades.map((trade, idx) => {
+              const pnl = Number(trade.realized_pnl_dollars ?? 0)
+              const isWinner = pnl >= 0
+              return (
+                <TableRow 
+                  key={`${engine.engine_version}-trade-${idx}`}
+                  className={isWinner ? 'bg-green-50/30 dark:bg-green-950/20' : 'bg-red-50/30 dark:bg-red-950/20'}
+                >
+                  <TableCell className="font-semibold">{trade.ticker || '—'}</TableCell>
+                  <TableCell>
+                    <Badge variant={trade.side === 'LONG' ? 'default' : 'secondary'} className="text-xs">
+                      {trade.side || '—'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-xs">${trade.entry_price?.toFixed(2) ?? '—'}</TableCell>
+                  <TableCell className="text-right font-mono text-xs">${trade.exit_price?.toFixed(2) ?? '—'}</TableCell>
+                  <TableCell className={`text-right font-mono font-semibold ${isWinner ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                    {isWinner ? '+' : ''}{pnl.toFixed(2)}
+                  </TableCell>
+                  <TableCell className={`text-right font-mono font-semibold ${Number(trade.realized_pnl_r) >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                    {Number(trade.realized_pnl_r ?? 0).toFixed(2)}R
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {trade.exit_timestamp ? new Date(trade.exit_timestamp).toLocaleDateString() : '—'}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+        <div className="text-xs text-muted-foreground border-t pt-3 flex justify-between">
+          <span>{sortedTrades.filter(t => Number(t.realized_pnl_dollars ?? 0) >= 0).length} winners</span>
+          <span>{sortedTrades.filter(t => Number(t.realized_pnl_dollars ?? 0) < 0).length} losers</span>
+          <span className="font-medium">Avg: {(sortedTrades.reduce((sum, t) => sum + Number(t.realized_pnl_r ?? 0), 0) / sortedTrades.length).toFixed(2)}R</span>
+        </div>
+      </div>
     )
   }
 
@@ -379,79 +406,159 @@ export default function EngineMetricsPage() {
           <CardTitle>Engine Configuration Differences</CardTitle>
           <CardDescription>Key parameter differences between V1 and V2</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             {/* V1 Configuration */}
-            <div className="space-y-3">
+            <div className="space-y-4 pb-4 border-b md:border-b-0 md:border-r md:pr-6">
               <div className="flex items-center gap-2">
                 <Badge variant="default" className="bg-blue-600">
                   V1 (PRIMARY)
                 </Badge>
                 <span className="text-sm font-medium">SWING_V1_EXPANSION</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Trailing Stop Activation:</span>
-                  <span className="font-medium">1.5R profit</span>
+              
+              <div className="space-y-3 text-sm">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Exit Logic</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">TP Activation:</span>
+                      <span className="font-medium">1.5R</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Trailing Distance:</span>
+                      <span className="font-medium">0.75R</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Time Exit:</span>
+                      <span className="font-medium">0.6R min</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Trailing Stop Distance:</span>
-                  <span className="font-medium">0.75R below peak</span>
+                
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Entry Logic</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Universe:</span>
+                      <span className="font-medium">All signals</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Time Exit Threshold:</span>
-                  <span className="font-medium">0.6R minimum</span>
-                </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Universe Filter:</span>
-                  <span className="font-medium">All SWING signals</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Risk Profile:</span>
-                  <span className="font-medium">Conservative exits</span>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Special Rules</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Capital Hygiene:</span>
+                      <span className="font-medium">None</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* V2 Configuration */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="border-emerald-600 text-emerald-600">
                   V2 (SHADOW)
                 </Badge>
                 <span className="text-sm font-medium">SWING_V2_ROBUST</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Trailing Stop Activation:</span>
-                  <span className="font-medium text-emerald-600">1.0R profit ↓ (faster)</span>
+              
+              <div className="space-y-3 text-sm">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Exit Logic</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">TP Activation:</span>
+                      <span className="font-medium text-emerald-600">1.0R ↓ <span className="text-xs text-muted-foreground">(faster)</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Trailing Distance:</span>
+                      <span className="font-medium text-emerald-600">0.5R ↓ <span className="text-xs text-muted-foreground">(tighter)</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Time Exit:</span>
+                      <span className="font-medium text-emerald-600">0.4R ↓ <span className="text-xs text-muted-foreground">(earlier)</span></span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Trailing Stop Distance:</span>
-                  <span className="font-medium text-emerald-600">0.5R below peak ↓ (tighter)</span>
+                
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Entry Logic</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Universe:</span>
+                      <span className="font-medium text-emerald-600">Top 20 tickers</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Time Exit Threshold:</span>
-                  <span className="font-medium text-emerald-600">0.4R minimum ↓ (earlier)</span>
-                </div>
-                <div className="flex justify-between border-b pb-1">
-                  <span className="text-muted-foreground">Universe Filter:</span>
-                  <span className="font-medium text-emerald-600">Top 20 promoted tickers only</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Risk Profile:</span>
-                  <span className="font-medium text-emerald-600">Aggressive profit protection</span>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Special Rules</p>
+                  <div className="space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Capital Hygiene:</span>
+                      <span className="font-medium text-emerald-600">Enabled</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              <strong>V2 Strategy:</strong> Locks in profits faster with tighter trailing stops,
-              exits sideways trades earlier, and focuses on highest-quality tickers. Designed to
-              reduce drawdowns and maximize profit capture while filtering out low-quality signals.
-            </p>
+          {/* Overnight Hygiene Section */}
+          <div className="border-t pt-6 space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <span className="text-emerald-600">🌙</span>
+                Overnight Capital Hygiene (V2 Only)
+              </h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Deterministic rule applied at pre-close (20:45–21:00 UTC) to reduce stagnant multi-day trades.
+              </p>
+              
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Trigger Window</p>
+                  <p className="text-sm font-medium">Last 15 min before close</p>
+                  <p className="text-xs text-muted-foreground">20:45–21:00 UTC</p>
+                </div>
+                
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Eligibility Check (all must be true)</p>
+                  <ul className="text-xs space-y-1 text-muted-foreground">
+                    <li>• Progress ≥ 50% of TP1</li>
+                    <li>• Age ≥ 6 hours</li>
+                    <li>• Weak continuation</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Actions (fire-and-forget)</p>
+                  <ul className="text-xs space-y-1 text-muted-foreground">
+                    <li>• Close 50% at market</li>
+                    <li>• Move SL to breakeven</li>
+                    <li>• ATR-based trailing on runner</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="border-t pt-4 space-y-3">
+            <div>
+              <h4 className="text-sm font-semibold mb-2">V1 vs V2 Strategy</h4>
+              <p className="text-sm text-muted-foreground">
+                <strong>V1:</strong> Conservative, broad universe, traditional TP/SL exits.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <strong>V2:</strong> Aggressive profit-locking (faster exits, tighter trails), quality filtering, + overnight hygiene for capital efficiency.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -33,6 +33,7 @@ const navigation = [
   { name: 'Engine Performance', href: '/admin/engines', icon: TrendingUp },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
+  { name: '  └ Debug', href: '/admin/signals/debug', icon: Bug },
   { name: 'Early Access', href: '/admin/early-access', icon: Users },
   { name: 'Contact Requests', href: '/admin/contact-requests', icon: Mail },
   { name: 'Discord', href: '/admin/discord', icon: MessageSquare },
