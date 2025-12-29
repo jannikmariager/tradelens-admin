@@ -294,7 +294,8 @@ export default function EngineMetricsPage() {
                     <TableCell className="text-red-600">-{engine.max_drawdown.toFixed(2)}%</TableCell>
                     <TableCell>${engine.current_equity.toLocaleString()}</TableCell>
                   </TableRow>
-                ))}
+                  )
+                })
               </TableBody>
             </Table>
           )}
