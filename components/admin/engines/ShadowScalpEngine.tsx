@@ -1,1 +1,252 @@
-'use client';\n\nimport { useState, useEffect } from 'react';\nimport { ChevronDown, TrendingUp, TrendingDown, Clock, DollarSign } from 'lucide-react';\n\ninterface ScalpTrade {\n  id: string;\n  ticker: string;\n  entry_price: number;\n  exit_price: number | null;\n  entry_time: string;\n  exit_time: string | null;\n  side: 'LONG' | 'SHORT';\n  pnl_dollars: number | null;\n  pnl_pct: number | null;\n  pnl_r: number | null;\n  exit_reason: string | null;\n  status: 'OPEN' | 'CLOSED';\n  entry_qty: number;\n  entry_risk_pct: number;\n}\n\ninterface ScalpMetrics {\n  total_trades: number;\n  trades_won: number;\n  trades_lost: number;\n  win_rate_pct: number;\n  total_pnl: number;\n  avg_trade_r: number;\n  open_positions: number;\n  max_positions: number;\n  current_equity: number;\n  starting_equity: number;\n}\n\nexport function ShadowScalpEngine() {\n  const [trades, setTrades] = useState<ScalpTrade[]>([]);\n  const [metrics, setMetrics] = useState<ScalpMetrics | null>(null);\n  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());\n  const [sortBy, setSortBy] = useState<'time' | 'pnl' | 'ticker'>('time');\n  const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('closed');\n  const [isLoading, setIsLoading] = useState(true);\n  const [error, setError] = useState<string | null>(null);\n\n  useEffect(() => {\n    fetchScalpData();\n    // Refresh every 30 seconds\n    const interval = setInterval(fetchScalpData, 30000);\n    return () => clearInterval(interval);\n  }, [filterStatus, sortBy]);\n\n  const fetchScalpData = async () => {\n    try {\n      setIsLoading(true);\n      setError(null);\n\n      const res = await fetch('/api/admin/shadow-scalp-metrics', {\n        method: 'GET',\n        headers: { 'Content-Type': 'application/json' },\n      });\n\n      if (!res.ok) throw new Error('Failed to fetch SCALP metrics');\n      const data = await res.json();\n\n      setMetrics(data.metrics);\n      setTrades(data.trades || []);\n    } catch (err) {\n      setError(err instanceof Error ? err.message : 'Unknown error');\n      console.error('[ShadowScalpEngine] Error fetching data:', err);\n    } finally {\n      setIsLoading(false);\n    }\n  };\n\n  const toggleRow = (id: string) => {\n    const newExpanded = new Set(expandedRows);\n    if (newExpanded.has(id)) {\n      newExpanded.delete(id);\n    } else {\n      newExpanded.add(id);\n    }\n    setExpandedRows(newExpanded);\n  };\n\n  // Filter trades\n  let filteredTrades = trades.filter(t => {\n    if (filterStatus === 'open') return t.status === 'OPEN';\n    if (filterStatus === 'closed') return t.status === 'CLOSED';\n    return true;\n  });\n\n  // Sort trades\n  filteredTrades = [...filteredTrades].sort((a, b) => {\n    if (sortBy === 'time') {\n      return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime();\n    } else if (sortBy === 'pnl') {\n      return (b.pnl_dollars || 0) - (a.pnl_dollars || 0);\n    } else {\n      return a.ticker.localeCompare(b.ticker);\n    }\n  });\n\n  const formatTime = (isoString: string) => {\n    return new Date(isoString).toLocaleString('en-US', {\n      month: 'short',\n      day: 'numeric',\n      hour: '2-digit',\n      minute: '2-digit',\n      second: '2-digit',\n    });\n  };\n\n  const getExitReasonBadge = (reason: string | null) => {\n    const badges: Record<string, string> = {\n      'TP': '🎯 Take Profit',\n      'SL': '🛑 Stop Loss',\n      'TIME_STOP': '⏰ Time Stop',\n      'FORCE_CLOSE': '🌙 Overnight',\n    };\n    return badges[reason || ''] || reason || '—';\n  };\n\n  if (isLoading && !metrics) {\n    return (\n      <div className=\"bg-white rounded-lg border border-gray-200 p-8 text-center\">\n        <div className=\"inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600\"></div>\n        <p className=\"mt-4 text-sm text-gray-600\">Loading SCALP metrics...</p>\n      </div>\n    );\n  }\n\n  if (error) {\n    return (\n      <div className=\"bg-red-50 rounded-lg border border-red-200 p-6\">\n        <h3 className=\"text-sm font-semibold text-red-900\">Error Loading SCALP Data</h3>\n        <p className=\"mt-2 text-sm text-red-700\">{error}</p>\n        <button\n          onClick={fetchScalpData}\n          className=\"mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium\"\n        >\n          Retry\n        </button>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"space-y-6\">\n      {/* Header */}\n      <div>\n        <h2 className=\"text-2xl font-bold text-gray-900\">Shadow Scalp Engine</h2>\n        <p className=\"mt-1 text-sm text-gray-600\">\n          SCALP_V1_MICROEDGE • Isolated $100k virtual portfolio • Consumes SWING signals\n        </p>\n      </div>\n\n      {/* Metrics Grid */}\n      {metrics && (\n        <div className=\"grid grid-cols-2 md:grid-cols-4 gap-4\">\n          {/* Current Equity */}\n          <div className=\"bg-white rounded-lg border border-gray-200 p-4\">\n            <div className=\"flex items-center justify-between\">\n              <div>\n                <p className=\"text-xs font-medium text-gray-500 uppercase\">Current Equity</p>\n                <p className=\"mt-2 text-xl font-bold text-gray-900\">\n                  ${metrics.current_equity.toFixed(0)}\n                </p>\n              </div>\n              <DollarSign className=\"w-8 h-8 text-blue-600\" />\n            </div>\n            <p className=\"mt-2 text-xs text-gray-600\">\n              Starting: ${metrics.starting_equity.toFixed(0)}\n            </p>\n          </div>\n\n          {/* Total P&L */}\n          <div className=\"bg-white rounded-lg border border-gray-200 p-4\">\n            <div className=\"flex items-center justify-between\">\n              <div>\n                <p className=\"text-xs font-medium text-gray-500 uppercase\">Total P&L</p>\n                <p\n                  className={`mt-2 text-xl font-bold ${\n                    metrics.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'\n                  }`}\n                >\n                  ${metrics.total_pnl.toFixed(2)}\n                </p>\n              </div>\n              {metrics.total_pnl >= 0 ? (\n                <TrendingUp className=\"w-8 h-8 text-green-600\" />\n              ) : (\n                <TrendingDown className=\"w-8 h-8 text-red-600\" />\n              )}\n            </div>\n            <p className=\"mt-2 text-xs text-gray-600\">\n              Return: {((metrics.total_pnl / metrics.starting_equity) * 100).toFixed(2)}%\n            </p>\n          </div>\n\n          {/* Win Rate */}\n          <div className=\"bg-white rounded-lg border border-gray-200 p-4\">\n            <p className=\"text-xs font-medium text-gray-500 uppercase\">Win Rate</p>\n            <p className=\"mt-2 text-xl font-bold text-gray-900\">\n              {metrics.win_rate_pct.toFixed(1)}%\n            </p>\n            <p className=\"mt-2 text-xs text-gray-600\">\n              {metrics.trades_won}W / {metrics.trades_lost}L / {metrics.total_trades}T\n            </p>\n          </div>\n\n          {/* Open Positions */}\n          <div className=\"bg-white rounded-lg border border-gray-200 p-4\">\n            <div className=\"flex items-center justify-between\">\n              <div>\n                <p className=\"text-xs font-medium text-gray-500 uppercase\">Open Positions</p>\n                <p className=\"mt-2 text-xl font-bold text-gray-900\">\n                  {metrics.open_positions}/{metrics.max_positions}\n                </p>\n              </div>\n              <Clock className=\"w-8 h-8 text-orange-600\" />\n            </div>\n          </div>\n        </div>\n      )}\n\n      {/* Controls */}\n      <div className=\"flex flex-wrap gap-4 items-center\">\n        <div className=\"flex gap-2\">\n          <button\n            onClick={() => setFilterStatus('all')}\n            className={`px-3 py-2 text-sm font-medium rounded-md ${\n              filterStatus === 'all'\n                ? 'bg-blue-100 text-blue-900'\n                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'\n            }`}\n          >\n            All\n          </button>\n          <button\n            onClick={() => setFilterStatus('open')}\n            className={`px-3 py-2 text-sm font-medium rounded-md ${\n              filterStatus === 'open'\n                ? 'bg-blue-100 text-blue-900'\n                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'\n            }`}\n          >\n            Open\n          </button>\n          <button\n            onClick={() => setFilterStatus('closed')}\n            className={`px-3 py-2 text-sm font-medium rounded-md ${\n              filterStatus === 'closed'\n                ? 'bg-blue-100 text-blue-900'\n                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'\n            }`}\n          >\n            Closed\n          </button>\n        </div>\n\n        <select\n          value={sortBy}\n          onChange={(e) => setSortBy(e.target.value as any)}\n          className=\"px-3 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50\"\n        >\n          <option value=\"time\">Sort: Recent</option>\n          <option value=\"pnl\">Sort: P&L</option>\n          <option value=\"ticker\">Sort: Ticker</option>\n        </select>\n\n        <button\n          onClick={fetchScalpData}\n          className=\"ml-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium\"\n        >\n          Refresh\n        </button>\n      </div>\n\n      {/* Trades Table */}\n      <div className=\"bg-white rounded-lg border border-gray-200 overflow-hidden\">\n        <div className=\"overflow-x-auto\">\n          <table className=\"w-full text-sm\">\n            <thead>\n              <tr className=\"border-b border-gray-200 bg-gray-50\">\n                <th className=\"px-4 py-3 text-left font-semibold text-gray-900\">Ticker</th>\n                <th className=\"px-4 py-3 text-left font-semibold text-gray-900\">Entry Time</th>\n                <th className=\"px-4 py-3 text-left font-semibold text-gray-900\">Entry / Exit</th>\n                <th className=\"px-4 py-3 text-right font-semibold text-gray-900\">P&L ($)</th>\n                <th className=\"px-4 py-3 text-right font-semibold text-gray-900\">P&L (R)</th>\n                <th className=\"px-4 py-3 text-left font-semibold text-gray-900\">Status</th>\n              </tr>\n            </thead>\n            <tbody>\n              {filteredTrades.length === 0 ? (\n                <tr>\n                  <td colSpan={6} className=\"px-4 py-8 text-center text-gray-500\">\n                    No trades found\n                  </td>\n                </tr>\n              ) : (\n                filteredTrades.map((trade) => (\n                  <>\n                    <tr\n                      key={trade.id}\n                      className=\"border-b border-gray-200 hover:bg-blue-50 cursor-pointer\"\n                      onClick={() => toggleRow(trade.id)}\n                    >\n                      <td className=\"px-4 py-3\">\n                        <span className=\"font-semibold text-gray-900\">{trade.ticker}</span>\n                        <span\n                          className={`ml-2 text-xs font-medium px-2 py-1 rounded ${\n                            trade.side === 'LONG'\n                              ? 'bg-green-100 text-green-800'\n                              : 'bg-red-100 text-red-800'\n                          }`}\n                        >\n                          {trade.side}\n                        </span>\n                      </td>\n                      <td className=\"px-4 py-3 text-gray-600\">\n                        {formatTime(trade.entry_time)}\n                      </td>\n                      <td className=\"px-4 py-3 text-gray-600\">\n                        <div className=\"text-xs\">\n                          <div>Entry: ${trade.entry_price.toFixed(4)}</div>\n                          {trade.exit_price !== null && (\n                            <div>Exit: ${trade.exit_price.toFixed(4)}</div>\n                          )}\n                        </div>\n                      </td>\n                      <td className=\"px-4 py-3 text-right\">\n                        {trade.pnl_dollars !== null ? (\n                          <span\n                            className={`font-semibold ${\n                              trade.pnl_dollars >= 0\n                                ? 'text-green-600'\n                                : 'text-red-600'\n                            }`}\n                          >\n                            {trade.pnl_dollars >= 0 ? '+' : ''}\n                            ${trade.pnl_dollars.toFixed(2)}\n                          </span>\n                        ) : (\n                          <span className=\"text-gray-500\">—</span>\n                        )}\n                      </td>\n                      <td className=\"px-4 py-3 text-right\">\n                        {trade.pnl_r !== null ? (\n                          <span\n                            className={`font-semibold ${\n                              trade.pnl_r >= 0 ? 'text-green-600' : 'text-red-600'\n                            }`}\n                          >\n                            {trade.pnl_r >= 0 ? '+' : ''}\n                            {trade.pnl_r.toFixed(2)}R\n                          </span>\n                        ) : (\n                          <span className=\"text-gray-500\">—</span>\n                        )}\n                      </td>\n                      <td className=\"px-4 py-3\">\n                        <span\n                          className={`text-xs font-medium px-2 py-1 rounded ${\n                            trade.status === 'OPEN'\n                              ? 'bg-blue-100 text-blue-800'\n                              : 'bg-gray-100 text-gray-800'\n                          }`}\n                        >\n                          {trade.status}\n                        </span>\n                      </td>\n                      <td className=\"px-4 py-3 text-right\">\n                        <ChevronDown\n                          className={`w-5 h-5 text-gray-400 transition-transform ${\n                            expandedRows.has(trade.id) ? 'transform rotate-180' : ''\n                          }`}\n                        />\n                      </td>\n                    </tr>\n\n                    {/* Expanded Details */}\n                    {expandedRows.has(trade.id) && (\n                      <tr className=\"bg-blue-50 border-b border-gray-200\">\n                        <td colSpan={7} className=\"px-4 py-4\">\n                          <div className=\"grid grid-cols-2 md:grid-cols-4 gap-4 text-sm\">\n                            <div>\n                              <p className=\"text-xs font-medium text-gray-600 uppercase\">Risk %</p>\n                              <p className=\"mt-1 font-semibold text-gray-900\">\n                                {trade.entry_risk_pct.toFixed(2)}%\n                              </p>\n                            </div>\n                            <div>\n                              <p className=\"text-xs font-medium text-gray-600 uppercase\">Quantity</p>\n                              <p className=\"mt-1 font-semibold text-gray-900\">\n                                {trade.entry_qty.toFixed(4)}\n                              </p>\n                            </div>\n                            <div>\n                              <p className=\"text-xs font-medium text-gray-600 uppercase\">Exit Reason</p>\n                              <p className=\"mt-1 font-semibold text-gray-900\">\n                                {getExitReasonBadge(trade.exit_reason)}\n                              </p>\n                            </div>\n                            <div>\n                              <p className=\"text-xs font-medium text-gray-600 uppercase\">Exit Time</p>\n                              <p className=\"mt-1 font-semibold text-gray-900\">\n                                {trade.exit_time\n                                  ? formatTime(trade.exit_time)\n                                  : 'Pending'}\n                              </p>\n                            </div>\n                          </div>\n                        </td>\n                      </tr>\n                    )}\n                  </>\n                ))\n              )}\n            </tbody>\n          </table>\n        </div>\n      </div>\n\n      {/* Footer */}\n      <p className=\"text-xs text-gray-500 text-center\">\n        SCALP_V1_MICROEDGE • Shadow-only • Never affects live trading • Data updates every 30s\n      </p>\n    </div>\n  );\n}\n"}}
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export function ShadowScalpEngine() {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const [metricsRes, paramsRes] = await Promise.all([
+        fetch('/api/admin/shadow-scalp-metrics'),
+        fetch('/api/admin/shadow-scalp-parameters'),
+      ]);
+
+      if (!metricsRes.ok || !paramsRes.ok) {
+        throw new Error('Failed to fetch SCALP data');
+      }
+
+      const metrics = await metricsRes.json();
+      const params = await paramsRes.json();
+
+      setData({ metrics, params });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p className="mt-4 text-sm text-gray-600">Loading SCALP metrics...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 rounded-lg border border-red-200 p-6">
+        <h3 className="text-sm font-semibold text-red-900">Error</h3>
+        <p className="mt-2 text-sm text-red-700">{error}</p>
+        <button
+          onClick={fetchData}
+          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <div>No data</div>;
+  }
+
+  const metrics = data.metrics;
+  const config = data.params.config;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Shadow Scalp Engine</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          SCALP_V1_MICROEDGE · Isolated $100k portfolio · Deterministic position sizing
+        </p>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <p className="text-xs font-medium text-gray-500 uppercase">Current Equity</p>
+          <p className="mt-2 text-xl font-bold text-gray-900">${metrics?.current_equity?.toFixed(0) || '100,000'}</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <p className="text-xs font-medium text-gray-500 uppercase">Total P&L</p>
+          <p className={`mt-2 text-xl font-bold ${(metrics?.total_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            ${(metrics?.total_pnl ?? 0).toFixed(2)}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <p className="text-xs font-medium text-gray-500 uppercase">Win Rate</p>
+          <p className="mt-2 text-xl font-bold text-gray-900">{metrics?.win_rate_pct?.toFixed(1) || '0'}%</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <p className="text-xs font-medium text-gray-500 uppercase">Open Positions</p>
+          <p className="mt-2 text-xl font-bold text-gray-900">
+            {metrics?.open_positions || 0}/{metrics?.max_positions || 4}
+          </p>
+        </div>
+      </div>
+
+      {/* Sizing Parameters */}
+      <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+        <h3 className="text-sm font-semibold text-blue-900 mb-4">Position Sizing Parameters</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Risk per Trade</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">
+              {config?.risk_pct_per_trade || 0.15}% (max {config?.max_risk_pct_per_trade || 0.20}%)
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Total Risk Limit</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">
+              {config?.max_total_open_risk_pct || 0.45}% of equity
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Max Positions</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">
+              {config?.max_concurrent_positions || 4} / {config?.hard_max_positions || 5} hard
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Min Stop Distance</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">{config?.min_stop_distance_r || 0.08}R</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Daily Loss Limit</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">{config?.max_daily_loss_pct || -0.75}%</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Current Open Risk</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">
+              {data.params.portfolio?.current_risk_pct || '0.000'}%
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Target R Range</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">
+              {config?.target_r_low || 0.15}R - {config?.target_r_high || 0.30}R
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-blue-700 uppercase">Entry Filter</p>
+            <p className="mt-1 font-mono font-semibold text-blue-900">≥{config?.min_confidence_pct || 60}% confidence</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sizing Decisions */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Recent Sizing Decisions</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <p className="text-xs font-medium text-gray-500 uppercase">Total Decisions</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+              {data.params.statistics?.total_decisions || 0}
+            </p>
+          </div>
+          <div className="bg-green-50 rounded-lg border border-green-200 p-4">
+            <p className="text-xs font-medium text-green-700 uppercase">Entry Decisions</p>
+            <p className="mt-2 text-2xl font-bold text-green-900">
+              {data.params.statistics?.entry_decisions || 0}
+            </p>
+          </div>
+          <div className="bg-red-50 rounded-lg border border-red-200 p-4">
+            <p className="text-xs font-medium text-red-700 uppercase">Skip Decisions</p>
+            <p className="mt-2 text-2xl font-bold text-red-900">
+              {data.params.statistics?.skip_decisions || 0}
+            </p>
+          </div>
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+            <p className="text-xs font-medium text-blue-700 uppercase">Entry Rate</p>
+            <p className="mt-2 text-2xl font-bold text-blue-900">
+              {data.params.statistics?.entry_rate || 0}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Decisions Table */}
+      {data.params.recent_decisions && data.params.recent_decisions.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-3 py-2 text-left font-semibold">Ticker</th>
+                  <th className="px-3 py-2 text-center font-semibold">Decision</th>
+                  <th className="px-3 py-2 text-right font-semibold">Entry Price</th>
+                  <th className="px-3 py-2 text-right font-semibold">Position Size</th>
+                  <th className="px-3 py-2 text-right font-semibold">Risk %</th>
+                  <th className="px-3 py-2 text-center font-semibold">Checks</th>
+                  <th className="px-3 py-2 text-left font-semibold">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.params.recent_decisions.slice(0, 20).map((decision: any) => (
+                  <tr key={decision.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="px-3 py-2 font-semibold">{decision.ticker}</td>
+                    <td className="px-3 py-2 text-center">
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded ${
+                          decision.decision === 'ENTRY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {decision.decision}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono">${decision.entry_price.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-right font-mono">{decision.final_position_size.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-right font-mono font-semibold">
+                      {decision.new_trade_risk_pct.toFixed(3)}%
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <span className="inline-flex gap-1">
+                        <span>{decision.check_max_positions_passed ? '✅' : '❌'}</span>
+                        <span>{decision.check_total_risk_passed ? '✅' : '❌'}</span>
+                        <span>{decision.check_duplicate_ticker_passed ? '✅' : '❌'}</span>
+                        <span>{decision.check_daily_loss_passed ? '✅' : '❌'}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-gray-600">
+                      {new Date(decision.run_timestamp).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={fetchData}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+      >
+        Refresh
+      </button>
+    </div>
+  );
+}
