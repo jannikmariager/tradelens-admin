@@ -155,8 +155,11 @@ export default function SwingV1DiagnosticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">SWING_V1_12_15DEC</h1>
-        <p className="text-muted-foreground mt-2">Shadow engine - swing trading diagnostics baseline</p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">SWING_V1_12_15DEC</h1>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-300">SHADOW</Badge>
+        </div>
+        <p className="text-muted-foreground mt-2">Baseline swing trading configuration from December 15 used as reference point</p>
       </div>
 
       {/* Engine Parameters */}

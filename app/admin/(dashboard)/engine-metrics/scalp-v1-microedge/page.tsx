@@ -159,8 +159,11 @@ export default function ScalpV1MicroedgePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">SCALP_V1_MICROEDGE</h1>
-        <p className="text-muted-foreground mt-2">Shadow engine - micro-edge scalping strategy with deterministic position sizing</p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">SCALP_V1_MICROEDGE</h1>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-300">SHADOW</Badge>
+        </div>
+        <p className="text-muted-foreground mt-2">Micro-edge scalping strategy with deterministic position sizing and risk management</p>
       </div>
 
       {/* Engine Parameters */}

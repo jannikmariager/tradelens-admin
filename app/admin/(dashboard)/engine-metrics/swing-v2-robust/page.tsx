@@ -160,8 +160,11 @@ export default function SwingV2RobustPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">SWING_V2_ROBUST</h1>
-        <p className="text-muted-foreground mt-2">Shadow engine - robust swing trading strategy</p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">SWING_V2_ROBUST</h1>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-300">SHADOW</Badge>
+        </div>
+        <p className="text-muted-foreground mt-2">Robust swing trading strategy with overnight capital hygiene and early profit protection</p>
       </div>
 
       {/* Engine Parameters */}
