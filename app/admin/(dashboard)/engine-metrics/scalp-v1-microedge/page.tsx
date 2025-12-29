@@ -310,6 +310,62 @@ export default function ScalpV1MicroedgePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* All Recent Trades by Date */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Recent Trades</CardTitle>
+          <CardDescription>Complete trade history (newest first)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {allTrades.length === 0 ? (
+            <p className="text-muted-foreground">No trades yet</p>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(
+                allTrades.reduce((acc: { [key: string]: EngineTrade[] }, trade) => {
+                  if (trade.exit_timestamp) {
+                    const date = new Date(trade.exit_timestamp).toLocaleDateString()
+                    if (!acc[date]) acc[date] = []
+                    acc[date].push(trade)
+                  }
+                  return acc
+                }, {})
+              )
+                .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+                .map(([date, trades]) => {
+                  const dateTrades = trades.sort((a, b) => {
+                    const aTime = a.exit_timestamp ? new Date(a.exit_timestamp).getTime() : 0
+                    const bTime = b.exit_timestamp ? new Date(b.exit_timestamp).getTime() : 0
+                    return bTime - aTime
+                  })
+                  const dayWins = dateTrades.filter(t => Number(t.realized_pnl_dollars ?? 0) >= 0).length
+                  const dayPnL = dateTrades.reduce((sum, t) => sum + Number(t.realized_pnl_dollars ?? 0), 0)
+                  const dayAvgR = dateTrades.length > 0 ? dateTrades.reduce((sum, t) => sum + Number(t.realized_pnl_r ?? 0), 0) / dateTrades.length : 0
+
+                  return (
+                    <div key={date} className="border-b last:border-b-0 pb-4 last:pb-0">
+                      <div className="flex items-center justify-between mb-4 py-2">
+                        <h3 className="font-semibold text-sm">{date}</h3>
+                        <div className="flex items-center gap-4 text-xs">
+                          <span className="text-muted-foreground">{dateTrades.length} trades</span>
+                          <span className={dayPnL >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                            {dayPnL >= 0 ? '+' : ''} ${dayPnL.toFixed(2)}
+                          </span>
+                          <Badge variant="outline" className="text-xs">{dayWins}W / {dateTrades.length - dayWins}L</Badge>
+                          <span className={dayAvgR >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                            Avg: {dayAvgR.toFixed(2)}R
+                          </span>
+                        </div>
+                      </div>
+                      <TradesTable trades={dateTrades} />
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

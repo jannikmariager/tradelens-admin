@@ -206,7 +206,7 @@ export async function GET() {
           const bTime = b.exit_timestamp ? new Date(b.exit_timestamp).getTime() : 0
           return bTime - aTime
         })
-        .slice(0, 10)
+        .slice(0, 100) // Return up to 100 recent trades for subpage display
 
       // Fetch engine parameters if applicable
       let engineParams: any = {}
