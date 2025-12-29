@@ -54,11 +54,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch engine versions
+    // Fetch all engine versions (PRIMARY and SHADOW)
     const { data: engineVersions, error: versionsError } = await supabase
       .from('engine_versions')
       .select('*')
-      .eq('engine_key', 'SWING')
       .order('created_at', { ascending: false })
 
     if (versionsError) {
@@ -209,8 +208,31 @@ export async function GET() {
         })
         .slice(0, 10)
 
+      // Fetch engine parameters if applicable
+      let engineParams: any = {}
+      if (version.engine_version === 'SCALP_V1_MICROEDGE') {
+        const { data: params, error: paramsError } = await supabase
+          .from('scalp_engine_config')
+          .select('*')
+          .eq('engine_version', version.engine_version)
+          .single()
+
+        if (!paramsError && params) {
+          engineParams = {
+            min_stop_distance_r: params.min_stop_distance_r,
+            atr_stop_distance_multiple: params.atr_stop_distance_multiple,
+            max_risk_pct_per_trade: params.max_risk_pct_per_trade,
+            max_total_open_risk_pct: params.max_total_open_risk_pct,
+            max_positions_per_ticker: params.max_positions_per_ticker,
+            max_daily_loss_pct: params.max_daily_loss_pct,
+            hard_max_positions: params.hard_max_positions,
+          }
+        }
+      }
+
       metrics.push({
         engine_version: version.engine_version,
+        engine_key: version.engine_key,
         run_mode: version.run_mode,
         is_enabled: version.is_enabled,
         is_user_visible: version.is_user_visible,
@@ -231,12 +253,12 @@ export async function GET() {
         })),
         recent_trades: recentTrades,
         display_label: version.notes ?? version.engine_version,
+        engine_params: engineParams,
       })
     }
     const journalTotals = await fetchJournalTotals(supabase)
 
     return NextResponse.json({ metrics, journal_totals: journalTotals }, { status: 200 })
-    return NextResponse.json({ metrics }, { status: 200 })
   } catch (error) {
     console.error('Error in engine-metrics API:', error)
     return NextResponse.json(

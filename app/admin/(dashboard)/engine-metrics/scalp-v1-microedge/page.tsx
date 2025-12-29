@@ -18,20 +18,30 @@ interface EngineTrade {
 }
 
 interface EngineMetric {
-  engine_version: string;
-  run_mode: 'PRIMARY' | 'SHADOW';
-  is_enabled: boolean;
-  total_trades: number;
-  winners: number;
-  losers: number;
-  win_rate: number;
-  total_pnl: number;
-  avg_r: number;
-  max_drawdown: number;
-  current_equity: number;
-  net_return: number;
-  recent_trades?: EngineTrade[];
-  display_label?: string;
+  engine_version: string
+  engine_key: string
+  run_mode: 'PRIMARY' | 'SHADOW'
+  is_enabled: boolean
+  total_trades: number
+  winners: number
+  losers: number
+  win_rate: number
+  total_pnl: number
+  avg_r: number
+  max_drawdown: number
+  current_equity: number
+  net_return: number
+  recent_trades?: EngineTrade[]
+  display_label?: string
+  engine_params?: {
+    min_stop_distance_r?: number
+    atr_stop_distance_multiple?: number
+    max_risk_pct_per_trade?: number
+    max_total_open_risk_pct?: number
+    max_positions_per_ticker?: number
+    max_daily_loss_pct?: number
+    hard_max_positions?: number
+  }
 }
 
 export default function ScalpV1MicroedgePage() {
@@ -152,6 +162,52 @@ export default function ScalpV1MicroedgePage() {
         <h1 className="text-3xl font-bold">SCALP_V1_MICROEDGE</h1>
         <p className="text-muted-foreground mt-2">Shadow engine - micro-edge scalping strategy with deterministic position sizing</p>
       </div>
+
+      {/* Engine Parameters */}
+      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration Parameters</CardTitle>
+            <CardDescription>Sizing and risk management settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Min Stop Distance</span>
+                  <span className="font-medium">{engine.engine_params.min_stop_distance_r}R</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">ATR Stop Multiple</span>
+                  <span className="font-medium">{engine.engine_params.atr_stop_distance_multiple}x</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max Risk per Trade</span>
+                  <span className="font-medium">{engine.engine_params.max_risk_pct_per_trade}%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max Total Open Risk</span>
+                  <span className="font-medium">{engine.engine_params.max_total_open_risk_pct}%</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max Positions per Ticker</span>
+                  <span className="font-medium">{engine.engine_params.max_positions_per_ticker}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Hard Max Positions</span>
+                  <span className="font-medium">{engine.engine_params.hard_max_positions}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max Daily Loss</span>
+                  <span className="font-medium text-red-600">{engine.engine_params.max_daily_loss_pct}%</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
