@@ -228,6 +228,17 @@ export async function GET() {
             max_daily_loss_pct: params.max_daily_loss_pct,
             hard_max_positions: params.hard_max_positions,
           }
+        } else {
+          // Provide default parameters if table not found
+          engineParams = {
+            min_stop_distance_r: 0.5,
+            atr_stop_distance_multiple: 1.5,
+            max_risk_pct_per_trade: 1.0,
+            max_total_open_risk_pct: 3.0,
+            max_positions_per_ticker: 2,
+            max_daily_loss_pct: 2.0,
+            hard_max_positions: 10,
+          }
         }
       } else if (version.engine_version === 'SWING_V2_ROBUST' || version.engine_version === 'SWING_V1_12_15DEC') {
         // Fetch promoted tickers for SWING engines
@@ -246,13 +257,19 @@ export async function GET() {
             strategy_type: version.engine_version === 'SWING_V2_ROBUST' ? 'Aggressive profit-locking' : 'Conservative baseline',
           }
           
-          // Add V2-specific parameters
+          // Add version-specific parameters
           if (version.engine_version === 'SWING_V2_ROBUST') {
             engineParams.tp_activation = '1.0R (faster)'
             engineParams.trailing_distance = '0.5R (tighter)'
             engineParams.time_exit = '0.4R (earlier)'
             engineParams.overnight_hygiene = 'Enabled'
             engineParams.hygiene_actions = '50% close at market, SL to BE, ATR-based trail'
+          } else if (version.engine_version === 'SWING_V1_12_15DEC') {
+            engineParams.tp_activation = '1.5R (standard)'
+            engineParams.trailing_distance = '1.0R (standard)'
+            engineParams.time_exit = '0.75R (standard)'
+            engineParams.overnight_hygiene = 'Disabled'
+            engineParams.hygiene_actions = 'None - baseline configuration'
           }
         }
       }
