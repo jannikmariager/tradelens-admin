@@ -33,7 +33,11 @@ interface EngineMetric {
   net_return: number
   recent_trades?: EngineTrade[]
   display_label?: string
-  engine_params?: any
+  engine_params?: {
+    promoted_tickers?: string
+    promoted_ticker_count?: number
+    strategy_type?: string
+  }
 }
 
 export default function SwingV1DiagnosticsPage() {
@@ -154,6 +158,46 @@ export default function SwingV1DiagnosticsPage() {
         <h1 className="text-3xl font-bold">SWING_V1_12_15DEC</h1>
         <p className="text-muted-foreground mt-2">Shadow engine - swing trading diagnostics baseline</p>
       </div>
+
+      {/* Engine Parameters */}
+      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration Parameters</CardTitle>
+            <CardDescription>Baseline strategy settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Strategy Type</h3>
+                <p className="text-sm text-muted-foreground">{engine.engine_params.strategy_type}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Universe</h3>
+                <div className="text-sm">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-muted-foreground">Promoted Tickers ({engine.engine_params.promoted_ticker_count})</span>
+                  </div>
+                  <p className="text-xs bg-muted/50 p-2 rounded font-mono">
+                    {engine.engine_params.promoted_tickers}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 text-xs text-muted-foreground">
+                <p className="mb-2"><strong>Note:</strong> This is the baseline SWING engine configuration from Dec 15, used as a reference point for V2 improvements.</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li>Conservative approach</li>
+                  <li>Broad signal universe</li>
+                  <li>Traditional TP/SL exits</li>
+                  <li>No overnight hygiene</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">

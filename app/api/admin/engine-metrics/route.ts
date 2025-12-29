@@ -210,6 +210,7 @@ export async function GET() {
 
       // Fetch engine parameters if applicable
       let engineParams: any = {}
+      
       if (version.engine_version === 'SCALP_V1_MICROEDGE') {
         const { data: params, error: paramsError } = await supabase
           .from('scalp_engine_config')
@@ -226,6 +227,32 @@ export async function GET() {
             max_positions_per_ticker: params.max_positions_per_ticker,
             max_daily_loss_pct: params.max_daily_loss_pct,
             hard_max_positions: params.hard_max_positions,
+          }
+        }
+      } else if (version.engine_version === 'SWING_V2_ROBUST' || version.engine_version === 'SWING_V1_12_15DEC') {
+        // Fetch promoted tickers for SWING engines
+        const { data: promotedTickers, error: tickersError } = await supabase
+          .from('promoted_tickers')
+          .select('ticker, avg_confidence, signal_count')
+          .eq('engine_version', version.engine_version)
+          .eq('is_promoted', true)
+          .order('signal_count', { ascending: false })
+
+        if (!tickersError && promotedTickers) {
+          const tickerList = promotedTickers.map((t: any) => t.ticker).join(', ')
+          engineParams = {
+            promoted_tickers: tickerList,
+            promoted_ticker_count: promotedTickers.length,
+            strategy_type: version.engine_version === 'SWING_V2_ROBUST' ? 'Aggressive profit-locking' : 'Conservative baseline',
+          }
+          
+          // Add V2-specific parameters
+          if (version.engine_version === 'SWING_V2_ROBUST') {
+            engineParams.tp_activation = '1.0R (faster)'
+            engineParams.trailing_distance = '0.5R (tighter)'
+            engineParams.time_exit = '0.4R (earlier)'
+            engineParams.overnight_hygiene = 'Enabled'
+            engineParams.hygiene_actions = '50% close at market, SL to BE, ATR-based trail'
           }
         }
       }

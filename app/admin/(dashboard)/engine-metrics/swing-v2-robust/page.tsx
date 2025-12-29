@@ -33,7 +33,16 @@ interface EngineMetric {
   net_return: number
   recent_trades?: EngineTrade[]
   display_label?: string
-  engine_params?: any
+  engine_params?: {
+    promoted_tickers?: string
+    promoted_ticker_count?: number
+    strategy_type?: string
+    tp_activation?: string
+    trailing_distance?: string
+    time_exit?: string
+    overnight_hygiene?: string
+    hygiene_actions?: string
+  }
 }
 
 export default function SwingV2RobustPage() {
@@ -154,6 +163,72 @@ export default function SwingV2RobustPage() {
         <h1 className="text-3xl font-bold">SWING_V2_ROBUST</h1>
         <p className="text-muted-foreground mt-2">Shadow engine - robust swing trading strategy</p>
       </div>
+
+      {/* Engine Parameters */}
+      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration Parameters</CardTitle>
+            <CardDescription>Strategy settings and exit logic</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Strategy Type</h3>
+                <p className="text-sm text-muted-foreground">{engine.engine_params.strategy_type}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Exit Logic</h3>
+                <div className="grid gap-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">TP Activation</span>
+                    <span className="font-medium">{engine.engine_params.tp_activation}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Trailing Distance</span>
+                    <span className="font-medium">{engine.engine_params.trailing_distance}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Time Exit</span>
+                    <span className="font-medium">{engine.engine_params.time_exit}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Universe</h3>
+                <div className="text-sm">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-muted-foreground">Promoted Tickers ({engine.engine_params.promoted_ticker_count})</span>
+                  </div>
+                  <p className="text-xs bg-muted/50 p-2 rounded font-mono">
+                    {engine.engine_params.promoted_tickers}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <span>🌙</span> Overnight Capital Hygiene
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className="font-medium text-emerald-600">{engine.engine_params.overnight_hygiene}</span>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-2">Actions at pre-close (20:45–21:00 UTC):</p>
+                    <p className="text-xs bg-muted/50 p-2 rounded">
+                      {engine.engine_params.hygiene_actions}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
