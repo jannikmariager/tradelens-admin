@@ -168,64 +168,61 @@ export default function SwingV2RobustPage() {
       </div>
 
       {/* Engine Parameters */}
-      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+      {engine.engine_params && (engine.engine_params.tp_activation || engine.engine_params.strategy_type) && (
         <Card>
           <CardHeader>
             <CardTitle>Configuration Parameters</CardTitle>
-            <CardDescription>Strategy settings and exit logic</CardDescription>
+            <CardDescription>Exit logic and trading settings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Strategy Type</h3>
-                <p className="text-sm text-muted-foreground">{engine.engine_params.strategy_type}</p>
+            <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+              {/* Strategy Type */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Strategy</h3>
+                <div className="text-sm">
+                  <span className="font-medium">{engine.engine_params.strategy_type}</span>
+                </div>
               </div>
-              
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Exit Logic</h3>
-                <div className="grid gap-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">TP Activation</span>
+
+              {/* Exit Logic */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Exit Logic</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">TP</span>
                     <span className="font-medium">{engine.engine_params.tp_activation}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Trailing Distance</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Trailing</span>
                     <span className="font-medium">{engine.engine_params.trailing_distance}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Time Exit</span>
                     <span className="font-medium">{engine.engine_params.time_exit}</span>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Universe</h3>
-                <div className="text-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-muted-foreground">Promoted Tickers ({engine.engine_params.promoted_ticker_count})</span>
-                  </div>
-                  <p className="text-xs bg-muted/50 p-2 rounded font-mono">
+              {/* Universe */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Universe</h3>
+                <div className="text-xs">
+                  <div className="text-muted-foreground mb-1">Tickers ({engine.engine_params.promoted_ticker_count})</div>
+                  <p className="bg-muted/50 p-1 rounded font-mono text-xs break-words">
                     {engine.engine_params.promoted_tickers}
                   </p>
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <span>🌙</span> Overnight Capital Hygiene
-                </h3>
-                <div className="space-y-2 text-sm">
+              {/* Overnight Hygiene */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">🌙 Hygiene</h3>
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Status</span>
                     <span className="font-medium text-emerald-600">{engine.engine_params.overnight_hygiene}</span>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground mb-2">Actions at pre-close (20:45–21:00 UTC):</p>
-                    <p className="text-xs bg-muted/50 p-2 rounded">
-                      {engine.engine_params.hygiene_actions}
-                    </p>
-                  </div>
+                  <p className="text-muted-foreground mt-1">{engine.engine_params.hygiene_actions}</p>
                 </div>
               </div>
             </div>

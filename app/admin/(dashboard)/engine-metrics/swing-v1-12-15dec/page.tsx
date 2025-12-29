@@ -37,6 +37,11 @@ interface EngineMetric {
     promoted_tickers?: string
     promoted_ticker_count?: number
     strategy_type?: string
+    tp_activation?: string
+    trailing_distance?: string
+    time_exit?: string
+    overnight_hygiene?: string
+    hygiene_actions?: string
   }
 }
 
@@ -163,39 +168,62 @@ export default function SwingV1DiagnosticsPage() {
       </div>
 
       {/* Engine Parameters */}
-      {engine.engine_params && Object.keys(engine.engine_params).length > 0 && (
+      {engine.engine_params && (engine.engine_params.tp_activation || engine.engine_params.strategy_type) && (
         <Card>
           <CardHeader>
             <CardTitle>Configuration Parameters</CardTitle>
-            <CardDescription>Baseline strategy settings</CardDescription>
+            <CardDescription>Baseline strategy settings (reference configuration)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Strategy Type</h3>
-                <p className="text-sm text-muted-foreground">{engine.engine_params.strategy_type}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Universe</h3>
+            <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+              {/* Strategy Type */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Strategy</h3>
                 <div className="text-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-muted-foreground">Promoted Tickers ({engine.engine_params.promoted_ticker_count})</span>
+                  <span className="font-medium">{engine.engine_params.strategy_type}</span>
+                </div>
+              </div>
+
+              {/* Exit Logic */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Exit Logic</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">TP</span>
+                    <span className="font-medium">{engine.engine_params.tp_activation}</span>
                   </div>
-                  <p className="text-xs bg-muted/50 p-2 rounded font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Trailing</span>
+                    <span className="font-medium">{engine.engine_params.trailing_distance}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Time Exit</span>
+                    <span className="font-medium">{engine.engine_params.time_exit}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Universe */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">Universe</h3>
+                <div className="text-xs">
+                  <div className="text-muted-foreground mb-1">Tickers ({engine.engine_params.promoted_ticker_count})</div>
+                  <p className="bg-muted/50 p-1 rounded font-mono text-xs break-words">
                     {engine.engine_params.promoted_tickers}
                   </p>
                 </div>
               </div>
 
-              <div className="border-t pt-4 text-xs text-muted-foreground">
-                <p className="mb-2"><strong>Note:</strong> This is the baseline SWING engine configuration from Dec 15, used as a reference point for V2 improvements.</p>
-                <ul className="space-y-1 ml-4 list-disc">
-                  <li>Conservative approach</li>
-                  <li>Broad signal universe</li>
-                  <li>Traditional TP/SL exits</li>
-                  <li>No overnight hygiene</li>
-                </ul>
+              {/* Overnight Hygiene */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground">🌙 Hygiene</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className="font-medium text-gray-500">{engine.engine_params.overnight_hygiene}</span>
+                  </div>
+                  <p className="text-muted-foreground mt-1 text-xs">{engine.engine_params.hygiene_actions}</p>
+                </div>
               </div>
             </div>
           </CardContent>
