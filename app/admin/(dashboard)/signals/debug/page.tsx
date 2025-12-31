@@ -9,29 +9,29 @@ async function getDebugInfo() {
 
   // Get debug summary
   const { data: debugSummary } = await supabase
-    .from('v_signal_debug_summary')
+    .from('private_analytics.v_signal_debug_summary')
     .select('*')
     .single()
 
   // Get today's generation status
   const { data: todayStatus } = await supabase
-    .from('v_signal_generation_status')
+    .from('private_analytics.v_signal_generation_status')
     .select('*')
     .limit(30)
 
   // Get active alerts
   const { data: alerts } = await supabase
-    .from('v_signal_generation_alerts')
+    .from('private_analytics.v_signal_generation_alerts')
     .select('*')
 
   // Get today's signals by engine
   const { data: signalsToday } = await supabase
-    .from('v_signals_today')
+    .from('private_analytics.v_signals_today')
     .select('*')
 
   // Get run timeline (last 7 days)
   const { data: timeline } = await supabase
-    .from('v_signal_run_timeline')
+    .from('private_analytics.v_signal_run_timeline')
     .select('*')
     .limit(7)
 
