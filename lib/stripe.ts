@@ -102,7 +102,10 @@ export async function calculateChurnRate(): Promise<number> {
       .eq('event_type', 'subscription.deleted')
       .gte('timestamp', thirtyDaysAgo.toISOString());
 
-    if (churnError) throw churnError;
+    if (churnError) {
+      console.error('Error fetching churned subscriptions:', churnError.message || churnError);
+      return 0;
+    }
 
     // Get total active subscriptions at start of period
     const { data: totalSubs, error: totalError } = await supabase
@@ -111,14 +114,17 @@ export async function calculateChurnRate(): Promise<number> {
       .eq('event_type', 'subscription.created')
       .lte('timestamp', thirtyDaysAgo.toISOString());
 
-    if (totalError) throw totalError;
+    if (totalError) {
+      console.error('Error fetching total subscriptions:', totalError.message || totalError);
+      return 0;
+    }
 
     const churned = churnedSubs?.length || 0;
     const total = totalSubs?.length || 1; // Avoid division by zero
 
     return Math.round((churned / total) * 100 * 100) / 100;
   } catch (error) {
-    console.error('Error calculating churn rate:', error);
+    console.error('Error calculating churn rate:', error instanceof Error ? error.message : String(error));
     return 0;
   }
 }
