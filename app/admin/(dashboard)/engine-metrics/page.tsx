@@ -29,6 +29,7 @@ interface EngineMetric {
   losers: number
   win_rate: number
   total_pnl: number
+  todays_pnl?: number
   avg_r: number
   max_drawdown: number
   current_equity: number
@@ -131,7 +132,7 @@ export default function EngineMetricsPage() {
                   <TableHead>Trades</TableHead>
                   <TableHead>Win Rate</TableHead>
                   <TableHead>Avg R</TableHead>
-                  <TableHead>Total PnL</TableHead>
+                  <TableHead>Today&apos;s PnL</TableHead>
                   <TableHead>Net Return</TableHead>
                   <TableHead>Max DD</TableHead>
                   <TableHead>Current Equity</TableHead>
@@ -158,8 +159,8 @@ export default function EngineMetricsPage() {
                     <TableCell className={engine.avg_r >= 0 ? 'text-green-600' : 'text-red-600'}>
                       {engine.avg_r.toFixed(2)}R
                     </TableCell>
-                    <TableCell className={engine.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      ${engine.total_pnl.toFixed(2)}
+                    <TableCell className={(engine.todays_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      ${ (engine.todays_pnl ?? 0).toFixed(2) }
                     </TableCell>
                     <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
                       {engine.net_return.toFixed(2)}%
@@ -194,7 +195,7 @@ export default function EngineMetricsPage() {
                   <TableHead>Trades</TableHead>
                   <TableHead>Win Rate</TableHead>
                   <TableHead>Avg R</TableHead>
-                  <TableHead>Total PnL</TableHead>
+                  <TableHead>Today&apos;s PnL</TableHead>
                   <TableHead>Net Return</TableHead>
                   <TableHead>Max DD</TableHead>
                   <TableHead>Current Equity</TableHead>
@@ -226,8 +227,8 @@ export default function EngineMetricsPage() {
                       <TableCell className={engine.avg_r >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {engine.avg_r.toFixed(2)}R
                       </TableCell>
-                      <TableCell className={engine.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        ${engine.total_pnl.toFixed(2)}
+                      <TableCell className={(engine.todays_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        ${ (engine.todays_pnl ?? 0).toFixed(2) }
                       </TableCell>
                       <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {engine.net_return.toFixed(2)}%

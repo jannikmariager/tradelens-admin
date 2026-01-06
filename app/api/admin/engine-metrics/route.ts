@@ -40,6 +40,15 @@ async function fetchJournalTotals(supabase: Awaited<ReturnType<typeof createClie
   }
 }
 
+const todayDate = new Date().toISOString().slice(0, 10)
+
+const isToday = (timestamp?: string | null) => {
+  if (!timestamp) return false
+  const parsed = new Date(timestamp)
+  if (Number.isNaN(parsed.getTime())) return false
+  return parsed.toISOString().slice(0, 10) === todayDate
+}
+
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -71,6 +80,8 @@ export async function GET() {
       const isPrimary = version.run_mode === 'PRIMARY'
 
       let tradeData, portfolioData
+
+      let unrealizedPnl = 0
 
       if (isPrimary) {
         // PRIMARY: get data from live_* tables
@@ -168,7 +179,28 @@ export async function GET() {
       const losers = tradeData.filter((t: any) => (t.realized_pnl_dollars || 0) < 0).length
       const winRate = totalTrades > 0 ? (winners / totalTrades) * 100 : 0
 
-      const totalPnl = tradeData.reduce((sum: number, t: any) => sum + (t.realized_pnl_dollars || 0), 0)
+      if (isPrimary) {
+        const { data: openPositions, error: openPositionsError } = await supabase
+          .from('live_positions')
+          .select('unrealized_pnl_dollars')
+          .eq('engine_version', version.engine_version)
+
+        if (openPositionsError) {
+          console.error(`Error fetching live_positions for ${version.engine_version}:`, openPositionsError)
+        } else {
+          unrealizedPnl = (openPositions || []).reduce(
+            (sum, pos) => sum + Number(pos.unrealized_pnl_dollars ?? 0),
+            0,
+          )
+        }
+      }
+
+      const totalRealized = tradeData.reduce((sum: number, t: any) => sum + (t.realized_pnl_dollars || 0), 0)
+      const todaysRealized = tradeData.reduce(
+        (sum: number, t: any) => (isToday(t.exit_timestamp) ? sum + (t.realized_pnl_dollars || 0) : sum),
+        0,
+      )
+      const totalPnl = totalRealized + unrealizedPnl
       const avgR = tradeData.length > 0
         ? tradeData.reduce((sum: number, t: any) => sum + (t.realized_pnl_r || 0), 0) / tradeData.length
         : 0
@@ -293,6 +325,7 @@ export async function GET() {
         losers,
         win_rate: winRate,
         total_pnl: totalPnl,
+        todays_pnl: todaysRealized,
         avg_r: avgR,
         max_drawdown: maxDrawdown,
         current_equity: currentEquity,
