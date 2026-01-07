@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 const STARTING_EQUITY = 100000
@@ -51,13 +52,17 @@ const isToday = (timestamp?: string | null) => {
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabaseAuth = await createClient()
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-    // Check auth
+    // Check auth with user-scoped client
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabaseAuth.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -78,6 +83,7 @@ export async function GET() {
 
     for (const version of engineVersions || []) {
       const isPrimary = version.run_mode === 'PRIMARY'
+      const isCrypto = (version.asset_class ?? '').toLowerCase() === 'crypto' || version.engine_key === 'CRYPTO_V1_SHADOW'
 
       let tradeData, portfolioData
 
@@ -125,52 +131,112 @@ export async function GET() {
         // Reverse to get chronological order for equity curve
         portfolioData = (portfolio || []).reverse()
       } else {
-        // SHADOW: get data from engine_* tables
-        const { data: trades, error: tradesError } = await supabase
-          .from('engine_trades')
-          .select('ticker, side, entry_price, exit_price, realized_pnl, realized_r, closed_at, opened_at')
-          .eq('engine_key', version.engine_key)
-          .eq('engine_version', version.engine_version)
-          .eq('run_mode', version.run_mode)
-          .order('closed_at', { ascending: false })
+        // SHADOW: get data from engine_* tables (stocks) or engine_crypto_* (crypto)
+        if (isCrypto) {
+          const { data: trades, error: tradesError } = await supabase
+            .from('engine_crypto_trades')
+            .select('symbol, side, price, qty, pnl, executed_at, action')
+            .eq('engine_key', version.engine_key)
+            .eq('version', version.engine_version)
+            .order('executed_at', { ascending: false })
 
-        if (tradesError) {
-          console.error(`Error fetching engine_trades for ${version.engine_version}:`, tradesError)
-          continue
+          if (tradesError) {
+            console.error(`Error fetching engine_crypto_trades for ${version.engine_version}:`, tradesError)
+            continue
+          }
+
+          tradeData = (trades || []).map((t: any) => ({
+            ticker: t.symbol,
+            side: t.side === 'sell' ? 'SHORT' : 'LONG',
+            entry_price: t.price,
+            exit_price: t.price,
+            realized_pnl_dollars: t.pnl,
+            realized_pnl_r: null,
+            exit_timestamp: t.executed_at,
+            entry_timestamp: t.executed_at,
+          }))
+
+          const { data: portfolio, error: portfolioError } = await supabase
+            .from('engine_crypto_portfolio_state')
+            .select('equity, unrealized, realized, ts')
+            .eq('engine_key', version.engine_key)
+            .eq('version', version.engine_version)
+            .order('ts', { ascending: true })
+            .limit(1000)
+
+          if (portfolioError) {
+            console.error(`Error fetching engine_crypto_portfolio_state for ${version.engine_version}:`, portfolioError)
+            continue
+          }
+
+          portfolioData = (portfolio || []).map((p: any) => ({
+            equity_dollars: p.equity,
+            timestamp: p.ts,
+            unrealized: p.unrealized ?? 0,
+            realized: p.realized ?? 0,
+          }))
+
+          // Sum open position unrealized PnL to include in totals
+          const { data: openPositions, error: openError } = await supabase
+            .from('engine_crypto_positions')
+            .select('unrealized_pnl')
+            .eq('engine_key', version.engine_key)
+            .eq('version', version.engine_version)
+            .eq('status', 'open')
+
+          if (!openError && openPositions) {
+            unrealizedPnl = openPositions.reduce(
+              (sum, pos) => sum + Number(pos.unrealized_pnl ?? 0),
+              0,
+            )
+          }
+        } else {
+          const { data: trades, error: tradesError } = await supabase
+            .from('engine_trades')
+            .select('ticker, side, entry_price, exit_price, realized_pnl, realized_r, closed_at, opened_at')
+            .eq('engine_key', version.engine_key)
+            .eq('engine_version', version.engine_version)
+            .eq('run_mode', version.run_mode)
+            .order('closed_at', { ascending: false })
+
+          if (tradesError) {
+            console.error(`Error fetching engine_trades for ${version.engine_version}:`, tradesError)
+            continue
+          }
+
+          tradeData = (trades || []).map((t: any) => ({
+            ticker: t.ticker,
+            side: t.side,
+            entry_price: t.entry_price,
+            exit_price: t.exit_price,
+            realized_pnl_dollars: t.realized_pnl,
+            realized_pnl_r: t.realized_r,
+            exit_timestamp: t.closed_at,
+            entry_timestamp: t.opened_at,
+          }))
+
+          const { data: portfolio, error: portfolioError } = await supabase
+            .from('engine_portfolios')
+            .select('equity, updated_at')
+            .eq('engine_key', version.engine_key)
+            .eq('engine_version', version.engine_version)
+            .eq('run_mode', version.run_mode)
+
+          if (portfolioError) {
+            console.error(`Error fetching engine_portfolios for ${version.engine_version}:`, portfolioError)
+            continue
+          }
+
+          // For shadow, we only have current snapshot, not historical
+          portfolioData = portfolio?.[0]
+            ? [
+                {
+                  equity_dollars: portfolio[0].equity,
+                  timestamp: portfolio[0].updated_at,
+                },
+              ]
+            : []
         }
-
-        tradeData = (trades || []).map((t: any) => ({
-          ticker: t.ticker,
-          side: t.side,
-          entry_price: t.entry_price,
-          exit_price: t.exit_price,
-          realized_pnl_dollars: t.realized_pnl,
-          realized_pnl_r: t.realized_r,
-          exit_timestamp: t.closed_at,
-          entry_timestamp: t.opened_at,
-        }))
-
-        const { data: portfolio, error: portfolioError } = await supabase
-          .from('engine_portfolios')
-          .select('equity, updated_at')
-          .eq('engine_key', version.engine_key)
-          .eq('engine_version', version.engine_version)
-          .eq('run_mode', version.run_mode)
-
-        if (portfolioError) {
-          console.error(`Error fetching engine_portfolios for ${version.engine_version}:`, portfolioError)
-          continue
-        }
-
-        // For shadow, we only have current snapshot, not historical
-        portfolioData = portfolio?.[0]
-          ? [
-              {
-                equity_dollars: portfolio[0].equity,
-                timestamp: portfolio[0].updated_at,
-              },
-            ]
-          : []
       }
 
       // Calculate metrics
@@ -335,7 +401,10 @@ export async function GET() {
           equity: p.equity_dollars || p.equity || 0,
         })),
         recent_trades: recentTrades,
-        display_label: version.notes ?? version.engine_version,
+        display_label:
+          isCrypto
+            ? 'Crypto V1'
+            : version.notes ?? version.engine_version,
         engine_params: engineParams,
       })
     }

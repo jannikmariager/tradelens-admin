@@ -203,12 +203,15 @@ export default function EngineMetricsPage() {
               </TableHeader>
               <TableBody>
                 {shadowEngines.map((engine) => {
-                  const engineSlug = engine.engine_version.toLowerCase().replace(/_/g, '-')
+                  const engineSlug =
+                    engine.engine_key?.toUpperCase() === 'CRYPTO_V1_SHADOW'
+                      ? 'crypto-v1-shadow'
+                      : engine.engine_version.toLowerCase().replace(/_/g, '-')
                   return (
-                    <TableRow key={engine.engine_version}>
+                    <TableRow key={`${engine.engine_key}-${engine.engine_version}`}>
                       <TableCell className="font-medium">
                         <Link href={`/admin/engine-metrics/${engineSlug}`} className="hover:underline text-blue-600">
-                          {engine.engine_version}
+                          {getEngineLabel(engine)}
                         </Link>
                       </TableCell>
                       <TableCell>

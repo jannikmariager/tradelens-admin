@@ -33,6 +33,7 @@ const navigation = [
   { name: '  └ SWING_V2_ROBUST', href: '/admin/engine-metrics/swing-v2-robust', icon: Cpu },
   { name: '  └ SCALP_V1_MICROEDGE', href: '/admin/engine-metrics/scalp-v1-microedge', icon: Cpu },
   { name: '  └ SWING_V1_12_15DEC', href: '/admin/engine-metrics/swing-v1-12-15dec', icon: Cpu },
+  { name: '  └ Crypto V1', href: '/admin/engine-metrics/crypto-v1-shadow', icon: Cpu },
   { name: 'Engine Performance', href: '/admin/engines', icon: TrendingUp },
   { name: 'SMC Engine', href: '/admin/smc-engine', icon: TrendingUp },
   { name: 'Signals', href: '/admin/signals', icon: BarChart3 },
