@@ -60,6 +60,8 @@ interface HeartbeatStatus {
   error?: string
 }
 
+type EngineMetricWithKey = EngineMetric & { engine_key?: string | null }
+
 export default function EngineMetricsPage() {
   const [metrics, setMetrics] = useState<EngineMetric[]>([])
   const [journalTotals, setJournalTotals] = useState<JournalTotals | null>(null)
@@ -114,10 +116,6 @@ export default function EngineMetricsPage() {
   const shadowEngines = metrics.filter((m) => m.run_mode === 'SHADOW')
   const activePrimary = primaryEngines.find((engine) => engine.is_enabled) ?? primaryEngines[0] ?? null
 
-  const formatDateTime = (value?: string | null) => {
-    if (!value) return '—'
-    return new Date(value).toLocaleString()
-  }
   const getEngineLabel = (engine: EngineMetric) => engine.display_label || engine.engine_version
   const heartbeatFailures = heartbeat?.results?.filter((r) => !r.ok) ?? []
 
@@ -291,13 +289,14 @@ export default function EngineMetricsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shadowEngines.map((engine) => {
+                {shadowEngines.map((engineObj) => {
+                  const engine = engineObj as EngineMetricWithKey
                   const engineSlug =
-                    (engine as any).engine_key?.toUpperCase() === 'CRYPTO_V1_SHADOW'
+                    engine.engine_key?.toUpperCase() === 'CRYPTO_V1_SHADOW'
                       ? 'crypto-v1-shadow'
                       : engine.engine_version.toLowerCase().replace(/_/g, '-')
                   return (
-                    <TableRow key={`${(engine as any).engine_key ?? 'SWING'}-${engine.engine_version}`}>
+                    <TableRow key={`${engine.engine_key ?? 'SWING'}-${engine.engine_version}`}>
                       <TableCell className="font-medium">
                         <Link href={`/admin/engine-metrics/${engineSlug}`} className="hover:underline text-blue-600">
                           {getEngineLabel(engine)}
