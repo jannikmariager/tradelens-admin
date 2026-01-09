@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const STARTING_EQUITY = 100000
+
+// Ensure UI labels match sidebar navigation and expected naming
+const LABEL_OVERRIDES: Record<string, string> = {
+  SWING_V1_EXPANSION: 'Baseline (Swing Expansion)',
+  SWING_FAV8_SHADOW: 'SWING_FAV8_SHADOW',
+  SWING_V2_ROBUST: 'SWING_V2_ROBUST',
+  SWING_V1_12_15DEC: 'SWING_V1_12_15DEC',
+  SCALP_V1_MICROEDGE: 'SCALP_V1_MICROEDGE',
+  v1: 'Crypto V1', // crypto shadow uses engine_version = 'v1'
+}
 
 async function fetchJournalTotals(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: closedTrades, error: closedTradesError } = await supabase
@@ -41,31 +51,54 @@ async function fetchJournalTotals(supabase: Awaited<ReturnType<typeof createClie
   }
 }
 
-const todayDate = new Date().toISOString().slice(0, 10)
-
-const isToday = (timestamp?: string | null) => {
+const isToday = (timestamp?: string | null, dayString?: string) => {
   if (!timestamp) return false
   const parsed = new Date(timestamp)
   if (Number.isNaN(parsed.getTime())) return false
-  return parsed.toISOString().slice(0, 10) === todayDate
+  const compareDate = dayString ?? new Date().toISOString().slice(0, 10)
+  return parsed.toISOString().slice(0, 10) === compareDate
 }
 
-export async function GET() {
+const ALLOWED_EMAILS = ['jannikmariager@gmail.com']
+
+export async function GET(request: NextRequest) {
   try {
+    const requestDate = new Date().toISOString().slice(0, 10)
     const supabaseAuth = await createClient()
     const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-
-    // Check auth with user-scoped client
+    // Check auth via cookies first
     const {
-      data: { user },
+      data: { user: cookieUser },
       error: authError,
     } = await supabaseAuth.auth.getUser()
 
-    if (authError || !user) {
+    let user = cookieUser
+
+    // Allow bearer token from Authorization header as fallback (mobile clients)
+    if ((!user || authError) && request) {
+      const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.slice('Bearer '.length).trim()
+        if (token.length > 0) {
+          const {
+            data: { user: tokenUser },
+          } = await supabase.auth.getUser(token)
+          if (tokenUser) {
+            user = tokenUser
+          }
+        }
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (!ALLOWED_EMAILS.includes((user.email || '').toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Fetch all engine versions (PRIMARY and SHADOW)
@@ -80,6 +113,34 @@ export async function GET() {
     }
 
     const metrics: any[] = []
+    let heartbeatStatus: any = null
+
+    try {
+      const hbResp = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/system_heartbeat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      })
+      if (hbResp.ok) {
+        heartbeatStatus = await hbResp.json()
+      } else {
+        heartbeatStatus = {
+          ok: false,
+          results: [],
+          error: `Heartbeat HTTP ${hbResp.status}`,
+        }
+      }
+    } catch (hbError) {
+      console.error('Error invoking system_heartbeat:', hbError)
+      heartbeatStatus = {
+        ok: false,
+        results: [],
+        error: (hbError as Error).message ?? 'Heartbeat invocation failed',
+      }
+    }
 
     for (const version of engineVersions || []) {
       const isPrimary = version.run_mode === 'PRIMARY'
@@ -263,7 +324,7 @@ export async function GET() {
 
       const totalRealized = tradeData.reduce((sum: number, t: any) => sum + (t.realized_pnl_dollars || 0), 0)
       const todaysRealized = tradeData.reduce(
-        (sum: number, t: any) => (isToday(t.exit_timestamp) ? sum + (t.realized_pnl_dollars || 0) : sum),
+        (sum: number, t: any) => (isToday(t.exit_timestamp, requestDate) ? sum + (t.realized_pnl_dollars || 0) : sum),
         0,
       )
       const totalPnl = totalRealized + unrealizedPnl
@@ -402,15 +463,19 @@ export async function GET() {
         })),
         recent_trades: recentTrades,
         display_label:
-          isCrypto
-            ? 'Crypto V1'
-            : version.notes ?? version.engine_version,
+          LABEL_OVERRIDES[version.engine_version] ??
+          (isCrypto ? LABEL_OVERRIDES['v1'] : undefined) ??
+          version.notes ??
+          version.engine_version,
         engine_params: engineParams,
       })
     }
     const journalTotals = await fetchJournalTotals(supabase)
 
-    return NextResponse.json({ metrics, journal_totals: journalTotals }, { status: 200 })
+    return NextResponse.json(
+      { metrics, journal_totals: journalTotals, heartbeat: heartbeatStatus },
+      { status: 200 },
+    )
   } catch (error) {
     console.error('Error in engine-metrics API:', error)
     return NextResponse.json(

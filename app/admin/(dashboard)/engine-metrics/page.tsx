@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -47,9 +48,22 @@ interface JournalTotals {
   net_return_pct: number
 }
 
+interface HeartbeatResult {
+  name: string
+  ok: boolean
+  details?: string
+}
+
+interface HeartbeatStatus {
+  ok: boolean
+  results: HeartbeatResult[]
+  error?: string
+}
+
 export default function EngineMetricsPage() {
   const [metrics, setMetrics] = useState<EngineMetric[]>([])
   const [journalTotals, setJournalTotals] = useState<JournalTotals | null>(null)
+  const [heartbeat, setHeartbeat] = useState<HeartbeatStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,6 +77,7 @@ export default function EngineMetricsPage() {
         const data = await response.json()
         setMetrics(data.metrics || [])
         setJournalTotals(data.journal_totals || null)
+        setHeartbeat(data.heartbeat || null)
       } catch (err) {
         setError((err as Error).message)
       } finally {
@@ -104,6 +119,7 @@ export default function EngineMetricsPage() {
     return new Date(value).toLocaleString()
   }
   const getEngineLabel = (engine: EngineMetric) => engine.display_label || engine.engine_version
+  const heartbeatFailures = heartbeat?.results?.filter((r) => !r.ok) ?? []
 
   return (
     <div className="space-y-6">
@@ -113,6 +129,79 @@ export default function EngineMetricsPage() {
           Compare live (PRIMARY) and shadow (SHADOW) engine versions
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Routing Flow (cheatsheet)</CardTitle>
+          <CardDescription>End-to-end path from focus build to execution</CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm space-y-2">
+          <ol className="list-decimal list-inside space-y-1">
+            <li>
+              Pre-market Focus V2:
+              <ul className="list-disc list-inside ml-4 space-y-0.5">
+                <li>Primary lane: confidence ≥ <span className="font-semibold">FOCUS_PRIMARY_MIN_CONFIDENCE</span> (default 55).</li>
+                <li>Momentum lane: confidence 48–54 + volatility gate (list/ATR hybrid) for momentum names.</li>
+                <li>Fallback fill up to <span className="font-semibold">MIN_FOCUS_SIZE</span>; overall cap <span className="font-semibold">FOCUS_MAX_TICKERS</span>. If still too small, engines scan full universe as before.</li>
+                <li>Writes <span className="font-semibold">daily_focus_tickers</span> (ordered primary → momentum → fallback) and optional audit rows.</li>
+              </ul>
+            </li>
+            <li>Signal generators (SWING/others) fetch focus list + market data (or full universe if focus too small); trade gate must be open; write <span className="font-semibold">ai_signals</span>.</li>
+            <li><span className="font-semibold">model_portfolio_manager</span> loads signals → filters to focus list (SWING) → applies trade gate.</li>
+            <li>If <span className="font-semibold">engine_allocation_enabled</span> AND symbol in allowlist → lookup <span className="font-semibold">ticker_engine_owner</span> to choose engine_key/version; else fallback to SWING/BASELINE.</li>
+            <li>Executes live sizing/entries; stores engine_key/version + publish flags on <span className="font-semibold">live_positions</span>/<span className="font-semibold">live_trades</span>/<span className="font-semibold">decision log</span>.</li>
+            <li>Daily job <span className="font-semibold">engine_allocation_scoring</span> scores shadow trades and may update <span className="font-semibold">ticker_engine_owner</span> (respecting allowlist, cooldown, no open live position).</li>
+            <li>Admin controls: feature flag & allowlist in <span className="font-semibold">app_feature_flags</span>; manual owner overrides update <span className="font-semibold">ticker_engine_owner</span>.</li>
+          </ol>
+        </CardContent>
+      </Card>
+      <Card className={heartbeat?.ok ? 'border-emerald-200' : 'border-red-200'}>
+        <CardHeader>
+          <CardTitle>System Heartbeat</CardTitle>
+          <CardDescription>
+            Live diagnostics from the <code>system_heartbeat</code> edge function. Updates whenever cron jobs run.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!heartbeat ? (
+            <p className="text-muted-foreground">No heartbeat data available.</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-sm font-medium">
+                {heartbeat.ok ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                )}
+                <span className={heartbeat.ok ? 'text-emerald-700' : 'text-red-700'}>
+                  {heartbeat.ok
+                    ? 'All monitored subsystems reporting healthy'
+                    : `${heartbeatFailures.length} check${heartbeatFailures.length === 1 ? '' : 's'} failing`}
+                </span>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {heartbeat.results?.map((result) => (
+                  <div
+                    key={result.name}
+                    className={`rounded-md border p-3 text-sm ${
+                      result.ok ? 'border-emerald-200 bg-emerald-50/40' : 'border-red-200 bg-red-50/40'
+                    }`}
+                  >
+                    <div className="font-semibold">{result.name.replace(/_/g, ' ')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {result.ok ? 'OK' : 'Requires attention'}
+                      {result.details ? ` — ${result.details}` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {heartbeat.error && (
+                <p className="text-xs text-red-600">Heartbeat error: {heartbeat.error}</p>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* PRIMARY Engines */}
       <Card>
@@ -204,11 +293,11 @@ export default function EngineMetricsPage() {
               <TableBody>
                 {shadowEngines.map((engine) => {
                   const engineSlug =
-                    engine.engine_key?.toUpperCase() === 'CRYPTO_V1_SHADOW'
+                    (engine as any).engine_key?.toUpperCase() === 'CRYPTO_V1_SHADOW'
                       ? 'crypto-v1-shadow'
                       : engine.engine_version.toLowerCase().replace(/_/g, '-')
                   return (
-                    <TableRow key={`${engine.engine_key}-${engine.engine_version}`}>
+                    <TableRow key={`${(engine as any).engine_key ?? 'SWING'}-${engine.engine_version}`}>
                       <TableCell className="font-medium">
                         <Link href={`/admin/engine-metrics/${engineSlug}`} className="hover:underline text-blue-600">
                           {getEngineLabel(engine)}
