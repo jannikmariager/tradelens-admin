@@ -327,6 +327,7 @@ export async function GET(request: NextRequest) {
         (sum: number, t: any) => (isToday(t.exit_timestamp, requestDate) ? sum + (t.realized_pnl_dollars || 0) : sum),
         0,
       )
+      const todaysLivePnl = todaysRealized + unrealizedPnl
       const totalPnl = totalRealized + unrealizedPnl
       const avgR = tradeData.length > 0
         ? tradeData.reduce((sum: number, t: any) => sum + (t.realized_pnl_r || 0), 0) / tradeData.length
@@ -453,6 +454,7 @@ export async function GET(request: NextRequest) {
         win_rate: winRate,
         total_pnl: totalPnl,
         todays_pnl: todaysRealized,
+        todays_live_pnl: todaysLivePnl,
         avg_r: avgR,
         max_drawdown: maxDrawdown,
         current_equity: currentEquity,

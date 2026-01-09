@@ -31,6 +31,7 @@ interface EngineMetric {
   win_rate: number
   total_pnl: number
   todays_pnl?: number
+  todays_live_pnl?: number
   avg_r: number
   max_drawdown: number
   current_equity: number
@@ -220,6 +221,7 @@ export default function EngineMetricsPage() {
                   <TableHead>Win Rate</TableHead>
                   <TableHead>Avg R</TableHead>
                   <TableHead>Today&apos;s PnL</TableHead>
+                  <TableHead>Realized + Unrealized</TableHead>
                   <TableHead>Net Return</TableHead>
                   <TableHead>Max DD</TableHead>
                   <TableHead>Current Equity</TableHead>
@@ -248,6 +250,9 @@ export default function EngineMetricsPage() {
                     </TableCell>
                     <TableCell className={(engine.todays_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
                       ${ (engine.todays_pnl ?? 0).toFixed(2) }
+                    </TableCell>
+                    <TableCell className={(engine.todays_live_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      ${ (engine.todays_live_pnl ?? 0).toFixed(2) }
                     </TableCell>
                     <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
                       {engine.net_return.toFixed(2)}%
@@ -283,6 +288,7 @@ export default function EngineMetricsPage() {
                   <TableHead>Win Rate</TableHead>
                   <TableHead>Avg R</TableHead>
                   <TableHead>Today&apos;s PnL</TableHead>
+                  <TableHead>Realized + Unrealized</TableHead>
                   <TableHead>Net Return</TableHead>
                   <TableHead>Max DD</TableHead>
                   <TableHead>Current Equity</TableHead>
@@ -320,6 +326,9 @@ export default function EngineMetricsPage() {
                       </TableCell>
                       <TableCell className={(engine.todays_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
                         ${ (engine.todays_pnl ?? 0).toFixed(2) }
+                      </TableCell>
+                      <TableCell className={(engine.todays_live_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        ${ (engine.todays_live_pnl ?? 0).toFixed(2) }
                       </TableCell>
                       <TableCell className={engine.net_return >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {engine.net_return.toFixed(2)}%
